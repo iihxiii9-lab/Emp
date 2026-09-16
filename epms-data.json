@@ -1,0 +1,19 @@
+{
+  "vehicles": [
+    {
+      "plate": "أبوظبي · 7 · 23841",
+      "type": "سيدان",
+      "color": "أسود معدني",
+      "floor": "الطابق الأول",
+      "status": "نشط"
+    }
+  ],
+  "visitors": [],
+  "bookings": [],
+  "users": [],
+  "security": {
+    "totp": { "secret": null, "otpauthUrl": null, "enabled": false },
+    "webauthn": { "credentialId": null, "label": null, "registeredAt": null },
+    "attempts": []
+  }
+}

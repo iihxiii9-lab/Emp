@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ركن | مجموعة الصقر القابضة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F4EADA;
+    --cream-soft:#FBF6EC;
+    --card:#EFE1C8;
+    --card-line:#DCC49B;
+    --ink:#3A2A1D;
+    --ink-soft:#6E5D49;
+    --copper:#A85C32;
+    --copper-dark:#8A4A27;
+    --olive:#6E7B4E;
+    --olive-soft:#E3E7D4;
+    --rust:#B23B20;
+    --rust-soft:#F4DCD3;
+    --gold:#C99A44;
+    --gold-soft:#F4E7C7;
+    --shadow: 0 10px 30px -14px rgba(58,42,29,.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Tajawal', sans-serif;
+    min-height:100vh;
+  }
+  h1,h2,h3,.brand-word{font-family:'Cairo', sans-serif;}
+  button{font-family:inherit;}
+
+  .app{
+    display:flex;
+    min-height:100vh;
+  }
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:250px;
+    flex:0 0 250px;
+    background:linear-gradient(180deg,#4A3521,#3A2A1D 70%);
+    color:var(--cream-soft);
+    padding:26px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+  }
+  .logo{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .logo-mark{
+    width:44px;height:44px;border-radius:12px;
+    background:linear-gradient(160deg,var(--gold),var(--copper));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Cairo',sans-serif; font-weight:800; font-size:20px;
+    color:#3A2A1D;
+    box-shadow:var(--shadow);
+  }
+  .logo-text .brand-word{font-size:15.5px; font-weight:800; line-height:1.25;}
+  .logo-text .brand-sub{font-size:11px; color:#D9C7AA; margin-top:4px; line-height:1.4;}
+
+  nav.nav{display:flex; flex-direction:column; gap:4px;}
+  .nav-item{
+    display:flex; align-items:center; gap:12px;
+    padding:11px 12px;
+    border-radius:10px;
+    color:#E7D9BF;
+    cursor:pointer;
+    font-size:14.5px;
+    font-weight:500;
+    transition:background .18s ease, color .18s ease;
+    border:1px solid transparent;
+  }
+  .nav-item svg{flex:0 0 auto; opacity:.85;}
+  .nav-item:hover{background:rgba(255,255,255,.06);}
+  .nav-item.active{
+    background:rgba(200,150,70,.18);
+    border-color:rgba(200,150,70,.35);
+    color:#FBF6EC;
+  }
+  .nav-item.active svg{opacity:1;}
+
+  .sidebar-foot{
+    margin-top:auto;
+    border-top:1px solid rgba(255,255,255,.08);
+    padding-top:16px;
+    font-size:12px;
+    color:#B79D78;
+    line-height:1.7;
+  }
+
+  /* ---------- MAIN ---------- */
+  .main{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 32px;
+    border-bottom:1px solid var(--card-line);
+    background:var(--cream-soft);
+    gap:20px;
+    flex-wrap:wrap;
+  }
+  .topbar-title h1{font-size:21px; margin:0 0 3px; font-weight:800;}
+  .topbar-title p{margin:0; font-size:13px; color:var(--ink-soft);}
+  .topbar-right{display:flex; align-items:center; gap:14px;}
+  .pill{
+    background:var(--card); border:1px solid var(--card-line);
+    padding:8px 14px; border-radius:999px; font-size:12.5px; color:var(--ink-soft);
+  }
+  .avatar{
+    display:flex; align-items:center; gap:10px;
+    background:var(--card); border:1px solid var(--card-line);
+    padding:6px 14px 6px 8px; border-radius:999px;
+  }
+  .avatar-img{
+    width:32px;height:32px;border-radius:50%;
+    background:linear-gradient(160deg,var(--olive),#4d5a35);
+    color:#fff; display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:13px; font-family:'Cairo',sans-serif;
+  }
+  .avatar-name{font-size:12.5px; font-weight:700;}
+  .avatar-role{font-size:11px; color:var(--ink-soft);}
+
+  .content{padding:28px 32px 60px; max-width:1200px;}
+  .view{display:none; animation:fadeIn .35s ease;}
+  .view.active{display:block;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  .section-head{margin-bottom:18px;}
+  .section-head h2{font-size:19px; margin:0 0 4px; font-weight:800;}
+  .section-head p{margin:0; font-size:13.5px; color:var(--ink-soft); max-width:640px; line-height:1.7;}
+
+  /* KPI cards */
+  .kpi-grid{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:26px;
+  }
+  .kpi-card{
+    background:var(--card-soft, var(--cream-soft));
+    background:var(--cream-soft);
+    border:1px solid var(--card-line);
+    border-radius:16px; padding:18px 18px 16px;
+    box-shadow:var(--shadow);
+  }
+  .kpi-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .kpi-icon{
+    width:34px;height:34px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .kpi-card .kpi-value{font-family:'Cairo',sans-serif; font-size:26px; font-weight:800; line-height:1;}
+  .kpi-card .kpi-label{font-size:12.5px; color:var(--ink-soft); margin-top:6px;}
+  .kpi-trend{font-size:11.5px; margin-top:8px; font-weight:700;}
+
+  /* generic card */
+  .card{
+    background:var(--cream-soft);
+    border:1px solid var(--card-line);
+    border-radius:16px;
+    padding:20px 22px;
+    box-shadow:var(--shadow);
+  }
+  .card + .card{margin-top:18px;}
+  .two-col{display:grid; grid-template-columns:1.3fr 1fr; gap:18px; align-items:start;}
+
+  .card h3{font-size:15.5px; margin:0 0 14px; font-weight:800; display:flex; align-items:center; gap:8px;}
+
+  /* floor occupancy */
+  .floor-row{display:flex; align-items:center; gap:14px; margin-bottom:16px;}
+  .floor-row:last-child{margin-bottom:0;}
+  .floor-name{width:110px; flex:0 0 110px; font-size:13px; font-weight:700;}
+  .floor-bar{flex:1; height:10px; background:var(--card); border-radius:999px; overflow:hidden; position:relative;}
+  .floor-bar-fill{height:100%; border-radius:999px; width:0%; transition:width 1s cubic-bezier(.2,.8,.2,1);}
+  .floor-count{width:96px; flex:0 0 96px; text-align:left; font-size:12px; color:var(--ink-soft);}
+
+  /* live feed */
+  .feed{display:flex; flex-direction:column; gap:0; max-height:300px; overflow:hidden;}
+  .feed-item{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:11px 4px; border-bottom:1px dashed var(--card-line);
+    font-size:12.8px;
+    animation:slideIn .5s ease;
+  }
+  .feed-item:last-child{border-bottom:none;}
+  @keyframes slideIn{from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);}}
+  .plate{
+    font-family:'Cairo',sans-serif; font-weight:800; letter-spacing:.5px;
+    background:var(--card); border:1px solid var(--card-line);
+    padding:3px 10px; border-radius:6px; font-size:12.5px;
+  }
+  .status-tag{padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;}
+  .status-ok{background:var(--olive-soft); color:#4c5934;}
+  .status-bad{background:var(--rust-soft); color:var(--rust);}
+
+  /* buttons */
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; justify-content:center;
+    border:none; border-radius:11px; padding:11px 20px;
+    font-size:13.5px; font-weight:700; cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:linear-gradient(160deg,var(--copper),var(--copper-dark)); color:#FBF6EC; box-shadow:0 8px 18px -8px rgba(138,74,39,.55);}
+  .btn-primary:disabled{opacity:.45; cursor:not-allowed; box-shadow:none;}
+  .btn-ghost{background:var(--card); color:var(--ink); border:1px solid var(--card-line);}
+  .btn-sm{padding:7px 14px; font-size:12.5px; border-radius:9px;}
+
+  /* forms */
+  label{display:block; font-size:12.5px; font-weight:700; margin-bottom:6px; color:var(--ink-soft);}
+  input, select{
+    width:100%; padding:10px 12px; border-radius:10px;
+    border:1px solid var(--card-line); background:var(--cream-soft);
+    font-family:inherit; font-size:13.5px; color:var(--ink);
+    margin-bottom:14px;
+  }
+  input:focus, select:focus{outline:2px solid var(--copper); outline-offset:1px;}
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:0 16px;}
+
+  /* booking */
+  .chip-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;}
+  .chip{
+    padding:9px 16px; border-radius:999px; font-size:12.8px; font-weight:700;
+    border:1px solid var(--card-line); background:var(--card); cursor:pointer;
+    color:var(--ink-soft);
+  }
+  .chip.active{background:var(--copper); border-color:var(--copper); color:#fff;}
+
+  .spot-grid{
+    display:grid; grid-template-columns:repeat(8, 1fr); gap:9px; margin:6px 0 18px;
+  }
+  .spot{
+    aspect-ratio:1/1; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:800; font-family:'Cairo',sans-serif;
+    cursor:pointer; border:1px solid transparent; color:#fff;
+    transition:transform .12s ease;
+  }
+  .spot:hover{transform:translateY(-2px);}
+  .spot.available{background:var(--olive); }
+  .spot.occupied{background:#C7B79B; color:#7a6a52; cursor:not-allowed;}
+  .spot.reserved{background:var(--gold); color:#3A2A1D;}
+  .spot.selected{background:var(--copper); box-shadow:0 0 0 3px rgba(168,92,50,.28);}
+  .spot.occupied:hover{transform:none;}
+
+  .legend{display:flex; gap:18px; flex-wrap:wrap; font-size:12px; color:var(--ink-soft); margin-bottom:16px;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .legend i{width:11px; height:11px; border-radius:3px; display:inline-block;}
+
+  .booking-summary{
+    background:var(--gold-soft); border:1px solid #E4C077; border-radius:12px;
+    padding:14px 16px; font-size:13px; display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:16px; gap:12px; flex-wrap:wrap;
+  }
+
+  /* vehicle cards */
+  .vehicle-list{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:16px;}
+  .vehicle-card{
+    background:var(--card); border:1px solid var(--card-line); border-radius:14px; padding:16px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .vehicle-top{display:flex; align-items:center; justify-content:space-between;}
+  .vehicle-plate{
+    font-family:'Cairo',sans-serif; font-weight:800; font-size:15px;
+    background:var(--cream-soft); border:1px solid var(--card-line);
+    padding:4px 12px; border-radius:7px; letter-spacing:1px;
+  }
+  .badge{padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;}
+  .badge-active{background:var(--olive-soft); color:#4c5934;}
+  .vehicle-meta{font-size:12.5px; color:var(--ink-soft); display:flex; gap:14px; flex-wrap:wrap;}
+
+  /* visitor */
+  .qr-box{
+    width:132px; height:132px; border-radius:14px; background:#fff;
+    border:1px solid var(--card-line); padding:10px; margin:0 auto 12px;
+    display:grid; grid-template-columns:repeat(7,1fr); grid-template-rows:repeat(7,1fr); gap:2px;
+  }
+  .qr-box i{border-radius:1.5px;}
+  .permit-card{
+    background:var(--card); border:1px dashed var(--copper); border-radius:16px;
+    padding:20px; text-align:center;
+  }
+  .permit-card h4{margin:2px 0 2px; font-size:15px; font-family:'Cairo',sans-serif; font-weight:800;}
+  .permit-card p{margin:2px 0; font-size:12px; color:var(--ink-soft);}
+
+  .visitor-list{margin-top:16px; display:flex; flex-direction:column; gap:10px;}
+  .visitor-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--card); border:1px solid var(--card-line); border-radius:12px;
+    padding:12px 16px; font-size:13px; gap:10px; flex-wrap:wrap;
+  }
+
+  /* violations */
+  .violation-row{
+    display:flex; align-items:center; gap:14px;
+    padding:14px 4px; border-bottom:1px solid var(--card-line);
+  }
+  .violation-row:last-child{border-bottom:none;}
+  .violation-icon{
+    width:38px; height:38px; border-radius:10px; flex:0 0 38px;
+    background:var(--rust-soft); color:var(--rust);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .violation-icon.resolved{background:var(--olive-soft); color:#4c5934;}
+  .violation-main{flex:1; min-width:0;}
+  .violation-main strong{font-size:13.5px;}
+  .violation-main div{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .violation-status{font-size:11.5px; font-weight:700; padding:5px 12px; border-radius:999px; flex:0 0 auto;}
+
+  .stat-row{display:flex; gap:14px; margin-bottom:18px; flex-wrap:wrap;}
+  .stat-box{
+    flex:1; min-width:140px; background:var(--card); border:1px solid var(--card-line);
+    border-radius:14px; padding:14px 16px;
+  }
+  .stat-box .num{font-family:'Cairo',sans-serif; font-weight:800; font-size:22px;}
+  .stat-box .lbl{font-size:12px; color:var(--ink-soft); margin-top:3px;}
+
+  /* security / 2FA */
+  .card h3{position:relative;}
+  .secret-chip{
+    font-family:'Cairo',sans-serif; font-weight:700; letter-spacing:1.5px;
+    background:var(--card); border:1px solid var(--card-line); border-radius:10px;
+    padding:12px 14px; font-size:14px; word-break:break-all; direction:ltr; text-align:left;
+    margin-bottom:6px;
+  }
+  .secret-chip.small{font-size:11px; font-weight:500; letter-spacing:0; color:var(--ink-soft);}
+  .badge-warn{background:var(--gold-soft); color:#8a6a24;}
+  .attempt-row{
+    display:flex; align-items:center; gap:14px;
+    padding:12px 4px; border-bottom:1px solid var(--card-line);
+  }
+  .attempt-row:last-child{border-bottom:none;}
+  .attempt-icon{
+    width:32px; height:32px; border-radius:9px; flex:0 0 32px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .attempt-main{flex:1; min-width:0;}
+  .attempt-main strong{font-size:13px;}
+  .attempt-main div{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+  .attempt-result{font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; flex:0 0 auto;}
+
+  /* auth screen (first page) */
+  .auth-screen{
+    position:fixed; inset:0; z-index:100;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(201,154,68,.18), transparent 45%),
+      linear-gradient(160deg, #4A3521, #2c1f14 75%);
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+  }
+  .auth-card{
+    width:100%; max-width:400px;
+    background:var(--cream-soft);
+    border-radius:22px;
+    padding:34px 28px 28px;
+    box-shadow:0 30px 70px -20px rgba(0,0,0,.55);
+  }
+  .auth-logo{display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:26px;}
+  .auth-logo-title{font-family:'Cairo',sans-serif; font-weight:800; font-size:16.5px; text-align:center;}
+  .auth-logo-sub{font-size:11.5px; color:var(--ink-soft); text-align:center;}
+  .auth-tabs{display:flex; background:var(--card); border-radius:12px; padding:4px; margin-bottom:22px;}
+  .auth-tab{
+    flex:1; border:none; background:transparent; padding:10px; border-radius:9px;
+    font-family:inherit; font-size:13px; font-weight:700; color:var(--ink-soft); cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .auth-tab.active{background:var(--copper); color:#fff;}
+  .auth-panel{display:none;}
+  .auth-panel.active{display:block;}
+  .auth-hint{font-size:11.5px; color:var(--ink-soft); text-align:center; margin-top:12px; line-height:1.8;}
+  .auth-error{
+    display:none; margin-top:14px; background:var(--rust-soft); color:var(--rust);
+    padding:10px 14px; border-radius:10px; font-size:12.5px; text-align:center;
+  }
+  .auth-error.show{display:block;}
+
+  .toast{
+    position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:var(--cream-soft); padding:13px 22px; border-radius:12px;
+    font-size:13.5px; font-weight:600; box-shadow:0 14px 34px -10px rgba(0,0,0,.45);
+    opacity:0; pointer-events:none; transition:all .35s cubic-bezier(.2,.8,.2,1);
+    z-index:50; display:flex; align-items:center; gap:10px;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  @media (max-width: 980px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .two-col{grid-template-columns:1fr;}
+    .vehicle-list{grid-template-columns:1fr;}
+    .form-grid{grid-template-columns:1fr;}
+    .spot-grid{grid-template-columns:repeat(6,1fr);}
+  }
+  @media (max-width: 760px){
+    .app{flex-direction:column;}
+    .sidebar{width:100%; flex:0 0 auto; flex-direction:row; align-items:center; overflow-x:auto; padding:14px 16px;}
+    .logo{flex:0 0 auto;}
+    nav.nav{flex-direction:row; gap:6px;}
+    .nav-item span{display:none;}
+    .sidebar-foot{display:none;}
+    .content{padding:20px 16px 60px;}
+    .kpi-grid{grid-template-columns:1fr 1fr;}
+    .spot-grid{grid-template-columns:repeat(5,1fr);}
+    .topbar{padding:16px 18px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ AUTH SCREEN (first page) ============ -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-mark" style="width:56px; height:56px; font-size:24px;">ر</div>
+      <div class="auth-logo-title">مجموعة الصقر القابضة</div>
+      <div class="auth-logo-sub">نظام ركن لإدارة مواقف الموظفين — أبوظبي</div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login" type="button">تسجيل الدخول</button>
+      <button class="auth-tab" data-tab="signup" type="button">إنشاء حساب</button>
+    </div>
+
+    <div class="auth-panel active" id="auth-panel-login">
+      <label>اسم المستخدم</label>
+      <input id="login-username" placeholder="rashed.almansoori" autocomplete="username">
+      <button class="btn btn-primary" id="login-btn" style="width:100%; justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg>
+        تسجيل الدخول ببصمة الجهاز
+      </button>
+      <p class="auth-hint">سيُطلب منك التحقق ببصمة الجهاز أو Face ID أو Windows Hello — بدون كلمة مرور.</p>
+    </div>
+
+    <div class="auth-panel" id="auth-panel-signup">
+      <label>الاسم الكامل</label>
+      <input id="signup-displayname" placeholder="راشد المنصوري" autocomplete="name">
+      <label>اسم المستخدم</label>
+      <input id="signup-username" placeholder="rashed.almansoori" autocomplete="username">
+      <button class="btn btn-primary" id="signup-btn" style="width:100%; justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        إنشاء حساب وتسجيل بصمة الجهاز
+      </button>
+      <p class="auth-hint">سيتم تسجيل بصمة جهازك كطريقة الدخول الوحيدة لهذا الحساب.</p>
+    </div>
+
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<div class="app" id="main-app" style="display:none;">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">ر</div>
+      <div class="logo-text">
+        <div class="brand-word">مجموعة الصقر القابضة</div>
+        <div class="brand-sub">نظام ركن لإدارة مواقف الموظفين</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <div class="nav-item active" data-view="dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="10" width="7" height="11"/><rect x="14" y="4" width="7" height="17"/><line x1="3" y1="21" x2="21" y2="21"/></svg>
+        <span>لوحة المراقبة</span>
+      </div>
+      <div class="nav-item" data-view="booking">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="7" y1="2" x2="7" y2="6"/><line x1="17" y1="2" x2="17" y2="6"/></svg>
+        <span>الحجز الذكي</span>
+      </div>
+      <div class="nav-item" data-view="vehicle">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 13l1.6-4.8A2 2 0 0 1 6.5 7h11a2 2 0 0 1 1.9 1.2L21 13"/><rect x="2" y="13" width="20" height="6" rx="1.5"/><circle cx="7" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/></svg>
+        <span>مركبتي وتصاريحي</span>
+      </div>
+      <div class="nav-item" data-view="visitors">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.3a3.2 3.2 0 0 1 0 6.2"/><path d="M20 20c0-2.6-1.7-4.8-4-5.6"/></svg>
+        <span>تصاريح الزوار</span>
+      </div>
+      <div class="nav-item" data-view="violations">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 2 20h20L12 3z"/><line x1="12" y1="10" x2="12" y2="14.5"/><circle cx="12" cy="17.2" r=".4" fill="currentColor"/></svg>
+        <span>المخالفات والإنذارات</span>
+      </div>
+      <div class="nav-item" data-view="security">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3.5v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9v-5L12 3z"/><path d="M9.5 12l1.8 1.8 3.2-3.6"/></svg>
+        <span>الأمان والمصادقة الثنائية</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-foot">
+      EPMS · الإصدار 1.0<br>
+      أبوظبي، الإمارات العربية المتحدة
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-title">
+        <h1 id="page-title">لوحة المراقبة والتوجيه الفوري</h1>
+        <p id="page-sub">نظرة لحظية على إشغال المواقف وحركة الدخول عبر بوابات ANPR</p>
+      </div>
+      <div class="topbar-right">
+        <div class="pill" id="clock">—</div>
+        <a class="btn btn-ghost btn-sm" id="view-json-btn" href="/api/data" target="_blank" rel="noopener" title="عرض محتوى epms-data.json الحالي عبر API">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/></svg>
+          عرض JSON عبر API
+        </a>
+        <div class="avatar">
+          <div class="avatar-img" id="avatar-img">؟</div>
+          <div>
+            <div class="avatar-name" id="avatar-name">—</div>
+            <div class="avatar-role" id="avatar-role">—</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="logout-btn" title="تسجيل الخروج">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <section class="view active" id="view-dashboard">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-label">المواقف المتاحة الآن</div>
+              <div class="kpi-icon" style="background:var(--olive-soft); color:#4c5934;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value">151</div>
+            <div class="kpi-trend" style="color:#4c5934;">من أصل 480 موقفًا</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-label">نسبة الإشغال</div>
+              <div class="kpi-icon" style="background:var(--gold-soft); color:#8a6a24;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value">68%</div>
+            <div class="kpi-trend" style="color:#8a6a24;">الهدف المؤسسي 95%</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-label">متوسط وقت الدخول</div>
+              <div class="kpi-icon" style="background:var(--card); color:var(--copper);">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M14 6l6 6-6 6"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value">2.4 ث</div>
+            <div class="kpi-trend" style="color:var(--copper);">أقل من الهدف 3 ثوانٍ</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-label">دقة قراءة اللوحات ANPR</div>
+              <div class="kpi-icon" style="background:var(--rust-soft); color:var(--rust);">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="12" rx="2"/><circle cx="12" cy="13" r="3"/><path d="M8 7l1.5-3h5L16 7"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value">98.6%</div>
+            <div class="kpi-trend" style="color:var(--rust);">يفوق الهدف 98%</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <h3>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+              الإشغال حسب الطابق
+            </h3>
+            <div id="floors"></div>
+          </div>
+
+          <div class="card">
+            <h3>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12h4l2-7 4 14 2-9 2 4h6"/></svg>
+              سجل بوابات ANPR اللحظي
+            </h3>
+            <div class="feed" id="feed"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ BOOKING ============ -->
+      <section class="view" id="view-booking">
+        <div class="section-head">
+          <h2>الحجز الذكي المسبق للمواقف</h2>
+          <p>اختر اليوم والطابق ثم انقر على أي موقف متاح لتخصيصه لك بشكل فوري، بحسب جدول حضورك المرن.</p>
+        </div>
+
+        <div class="card">
+          <h3>1. اختر اليوم</h3>
+          <div class="chip-row" id="day-chips"></div>
+
+          <h3>2. اختر الطابق</h3>
+          <div class="chip-row" id="floor-chips"></div>
+
+          <div class="legend">
+            <span><i style="background:var(--olive)"></i> متاح</span>
+            <span><i style="background:#C7B79B"></i> مشغول</span>
+            <span><i style="background:var(--gold)"></i> مخصص للزوار</span>
+            <span><i style="background:var(--copper)"></i> اختيارك الحالي</span>
+          </div>
+
+          <div class="spot-grid" id="spot-grid"></div>
+
+          <div class="booking-summary" id="booking-summary">
+            <span>لم يتم اختيار أي موقف بعد</span>
+            <button class="btn btn-primary" id="confirm-btn" disabled>تأكيد الحجز</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VEHICLE ============ -->
+      <section class="view" id="view-vehicle">
+        <div class="section-head">
+          <h2>مركبتي وتصاريحي</h2>
+          <p>سجّل بيانات مركبتك لربطها تلقائيًا بسجلك الوظيفي وإصدار تصريح دخول عبر بوابات ANPR.</p>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <h3>تسجيل مركبة جديدة</h3>
+            <div class="form-grid">
+              <div>
+                <label>الرقم الوظيفي</label>
+                <input id="v-empid" placeholder="EMP-2461" value="EMP-2461">
+              </div>
+              <div>
+                <label>اسم الموظف</label>
+                <input id="v-name" placeholder="راشد المنصوري" value="راشد المنصوري">
+              </div>
+              <div>
+                <label>رقم لوحة المركبة</label>
+                <input id="v-plate" placeholder="أبوظبي · 7 · 23841">
+              </div>
+              <div>
+                <label>نوع المركبة</label>
+                <select id="v-type">
+                  <option>سيدان</option>
+                  <option>دفع رباعي (SUV)</option>
+                  <option>دراجة نارية</option>
+                  <option>مركبة كهربائية</option>
+                </select>
+              </div>
+              <div>
+                <label>لون المركبة</label>
+                <input id="v-color" placeholder="أبيض لؤلؤي">
+              </div>
+              <div>
+                <label>الطابق المفضل</label>
+                <select id="v-floor">
+                  <option>الطابق الأرضي</option>
+                  <option>الطابق الأول</option>
+                  <option>الطابق الثاني</option>
+                  <option>السطح</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-primary" id="add-vehicle-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              تسجيل المركبة وإصدار التصريح
+            </button>
+          </div>
+
+          <div class="card">
+            <h3>حالة التصريح الحالي</h3>
+            <p style="font-size:13px; color:var(--ink-soft); line-height:1.9; margin-top:-6px;">
+              مركبتك المسجّلة مربوطة آليًا بسجلك في نظام الموارد البشرية، ويُمنح الدخول تلقائيًا عند التعرف على لوحتك عبر كاميرات ANPR دون الحاجة لبطاقة إضافية.
+            </p>
+            <div style="background:var(--olive-soft); border-radius:12px; padding:12px 14px; font-size:12.5px; color:#4c5934; display:flex; align-items:center; gap:8px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+              التصريح نشط ومتزامن مع أنظمة الأمن
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>مركباتي المسجّلة</h3>
+          <div class="vehicle-list" id="vehicle-list"></div>
+        </div>
+      </section>
+
+      <!-- ============ VISITORS ============ -->
+      <section class="view" id="view-visitors">
+        <div class="section-head">
+          <h2>إدارة مواقف الزوار وتصاريح المؤتمرات</h2>
+          <p>أصدر تصريح دخول مؤقت لزوارك عبر رمز QR يُرسل مباشرة إلى بريدهم الإلكتروني.</p>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <h3>إصدار تصريح زيارة</h3>
+            <div class="form-grid">
+              <div>
+                <label>اسم الزائر</label>
+                <input id="g-name" placeholder="يوسف العامري">
+              </div>
+              <div>
+                <label>البريد الإلكتروني</label>
+                <input id="g-email" placeholder="visitor@company.com">
+              </div>
+              <div>
+                <label>تاريخ الزيارة</label>
+                <input id="g-date" type="date">
+              </div>
+              <div>
+                <label>الغرض من الزيارة</label>
+                <select id="g-purpose">
+                  <option>اجتماع عمل</option>
+                  <option>مقابلة توظيف</option>
+                  <option>مؤتمر / فعالية</option>
+                  <option>صيانة وتوريد</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-primary" id="add-guest-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="21" y2="14"/><line x1="17.5" y1="14" x2="17.5" y2="21"/></svg>
+              إصدار رمز الدخول
+            </button>
+
+            <h3 style="margin-top:22px;">تصاريح صدرت مؤخرًا</h3>
+            <div class="visitor-list" id="visitor-list"></div>
+          </div>
+
+          <div class="card">
+            <h3>آخر تصريح صادر</h3>
+            <div class="permit-card" id="permit-preview">
+              <div class="qr-box" id="qr-box"></div>
+              <h4 id="permit-name">لا يوجد تصريح بعد</h4>
+              <p id="permit-purpose">أصدر تصريحًا لعرضه هنا</p>
+              <p id="permit-date">—</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIOLATIONS ============ -->
+      <section class="view" id="view-violations">
+        <div class="section-head">
+          <h2>المخالفات والإنذارات الآلية</h2>
+          <p>يرصد النظام آليًا حالات الوقوف الخاطئ وتجاوز المدة المحددة، للحفاظ على الانضباط وإتاحة المواقف للمستحقين.</p>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-box">
+            <div class="num">7</div>
+            <div class="lbl">إنذارات هذا الشهر</div>
+          </div>
+          <div class="stat-box">
+            <div class="num">3</div>
+            <div class="lbl">قيد المعالجة</div>
+          </div>
+          <div class="stat-box">
+            <div class="num">4</div>
+            <div class="lbl">تمت معالجتها</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>سجل المخالفات</h3>
+          <div id="violation-list"></div>
+        </div>
+      </section>
+
+      <!-- ============ SECURITY / 2FA ============ -->
+      <section class="view" id="view-security">
+        <div class="section-head">
+          <h2>الأمان والمصادقة الثنائية</h2>
+          <p>فعّل التحقق بخطوتين لحسابك عبر تطبيق مصادقة (TOTP) أو بصمة الجهاز (WebAuthn)، وتابع سجل آخر المحاولات.</p>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <h3>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 8h.01M8 12h.01M8 16h.01M12 8h4M12 12h4M12 16h4"/></svg>
+              رمز TOTP عبر تطبيق مصادقة
+              <span class="badge" id="totp-status-badge" style="margin-inline-start:auto; background:var(--card); color:var(--ink-soft);">غير مفعّل</span>
+            </h3>
+            <p style="font-size:12.5px; color:var(--ink-soft); line-height:1.8; margin-top:-6px;">
+              اربط تطبيق مصادقة مثل Google Authenticator أو Authy عبر إدخال الرمز السرّي يدويًا، ثم تحقق من رمز مكوّن من 6 أرقام لتفعيله.
+            </p>
+
+            <button class="btn btn-ghost btn-sm" id="totp-setup-btn" style="margin-bottom:14px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              إنشاء رمز سرّي جديد (totp_setup)
+            </button>
+
+            <div id="totp-secret-box" style="display:none;">
+              <label>الرمز السرّي (أدخله يدويًا في تطبيق المصادقة)</label>
+              <div class="secret-chip" id="totp-secret-text">—</div>
+              <label style="margin-top:12px;">رابط otpauth (اختياري، للنسخ)</label>
+              <div class="secret-chip small" id="totp-otpauth-text">—</div>
+            </div>
+
+            <div style="margin-top:16px;">
+              <label>رمز التحقق المكوّن من 6 أرقام</label>
+              <div style="display:flex; gap:10px;">
+                <input id="totp-code-input" placeholder="123456" maxlength="6" inputmode="numeric" style="margin-bottom:0;">
+                <button class="btn btn-primary btn-sm" id="totp-verify-btn" style="flex:0 0 auto;">تحقق (totp_verify)</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.3" r="1.3"/></svg>
+              بصمة الجهاز (WebAuthn)
+              <span class="badge" id="webauthn-status-badge" style="margin-inline-start:auto; background:var(--card); color:var(--ink-soft);">غير مسجّلة</span>
+            </h3>
+            <p style="font-size:12.5px; color:var(--ink-soft); line-height:1.8; margin-top:-6px;">
+              سجّل بصمة الجهاز أو Face ID أو Windows Hello كطريقة دخول سريعة وآمنة، باستخدام مصادقة الجهاز المدمجة في متصفحك.
+            </p>
+
+            <button class="btn btn-primary btn-sm" id="webauthn-register-btn" style="margin-bottom:12px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg>
+              تسجيل بصمة الجهاز
+            </button>
+
+            <div id="webauthn-info-box" style="display:none; background:var(--olive-soft); border-radius:12px; padding:12px 14px; font-size:12.5px; color:#4c5934; margin-bottom:14px;">
+              <div id="webauthn-info-text">—</div>
+            </div>
+
+            <button class="btn btn-ghost btn-sm" id="webauthn-delete-btn" style="border-color:var(--rust); color:var(--rust);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-8 0v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7"/></svg>
+              حذف الواصف نهائيًا
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            سجلّ آخر المحاولات
+          </h3>
+          <div id="security-attempts-list"></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- Auth (sign in / sign up with passkey) ---------------- */
+function b64urlToBuffer(base64url){
+  const padding = '='.repeat((4 - base64url.length % 4) % 4);
+  const base64 = (base64url + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const buf = new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) buf[i] = raw.charCodeAt(i);
+  return buf.buffer;
+}
+function bufferToB64url(buf){
+  const bytes = new Uint8Array(buf);
+  let str = '';
+  for(let i=0;i<bytes.byteLength;i++) str += String.fromCharCode(bytes[i]);
+  return btoa(str).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
+function showAuthError(msg){
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function hideAuthError(){
+  document.getElementById('auth-error').classList.remove('show');
+}
+
+function computeInitials(name){
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return '؟';
+  return parts.slice(0,2).map(w=>w[0]).join('');
+}
+
+function showAuthScreen(){
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('main-app').style.display = 'none';
+}
+function showMainApp(user){
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'flex';
+  document.getElementById('avatar-name').textContent = user.displayName;
+  document.getElementById('avatar-role').textContent = '@' + user.username;
+  document.getElementById('avatar-img').textContent = computeInitials(user.displayName);
+}
+
+/* Tabs */
+document.querySelectorAll('.auth-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.auth-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('auth-panel-' + tab.dataset.tab).classList.add('active');
+    hideAuthError();
+  });
+});
+
+function deviceLabel(){
+  return /Mac|iPhone|iPad/.test(navigator.platform) ? 'Touch ID / Face ID' :
+         /Win/.test(navigator.platform) ? 'Windows Hello' : 'بصمة الجهاز';
+}
+
+/* ---- Sign up: create account + register passkey in one flow ---- */
+document.getElementById('signup-btn').addEventListener('click', async ()=>{
+  hideAuthError();
+  const displayName = document.getElementById('signup-displayname').value.trim();
+  const username = document.getElementById('signup-username').value.trim().toLowerCase();
+  if(!displayName || !username){ showAuthError('الرجاء تعبئة الاسم الكامل واسم المستخدم'); return; }
+  if(!window.PublicKeyCredential){ showAuthError('متصفحك لا يدعم تسجيل الدخول ببصمة الجهاز (WebAuthn)'); return; }
+
+  try{
+    const startRes = await fetch('/api/auth/signup_start', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, displayName })
+    });
+    const startData = await startRes.json();
+    if(!startRes.ok){ showAuthError(startData.error || 'تعذّر بدء إنشاء الحساب'); return; }
+
+    const credential = await navigator.credentials.create({
+      publicKey: {
+        challenge: b64urlToBuffer(startData.challenge),
+        rp: { name: startData.rpName, id: startData.rpId },
+        user: {
+          id: b64urlToBuffer(startData.userId),
+          name: startData.userName,
+          displayName: startData.userDisplayName
+        },
+        pubKeyCredParams: [ { type:'public-key', alg:-7 }, { type:'public-key', alg:-257 } ],
+        authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required' },
+        timeout: 60000,
+        attestation: 'none'
+      }
+    });
+
+    const finishRes = await fetch('/api/auth/signup_finish', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, credentialId: credential.id, label: deviceLabel() })
+    });
+    const finishData = await finishRes.json();
+    if(!finishRes.ok || !finishData.ok){ showAuthError(finishData.error || 'تعذّر إكمال إنشاء الحساب'); return; }
+
+    showMainApp(finishData);
+  }catch(e){
+    console.error(e);
+    if(e.name === 'NotAllowedError') showAuthError('تم إلغاء تسجيل بصمة الجهاز');
+    else showAuthError('تعذّر إنشاء الحساب — تأكد من تشغيل node server.js');
+  }
+});
+
+/* ---- Sign in: authenticate purely with the registered passkey ---- */
+document.getElementById('login-btn').addEventListener('click', async ()=>{
+  hideAuthError();
+  const username = document.getElementById('login-username').value.trim().toLowerCase();
+  if(!username){ showAuthError('أدخل اسم المستخدم'); return; }
+  if(!window.PublicKeyCredential){ showAuthError('متصفحك لا يدعم تسجيل الدخول ببصمة الجهاز (WebAuthn)'); return; }
+
+  try{
+    const startRes = await fetch('/api/auth/login_start', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username })
+    });
+    const startData = await startRes.json();
+    if(!startRes.ok){ showAuthError(startData.error || 'لا يوجد حساب بهذا الاسم'); return; }
+
+    const credential = await navigator.credentials.get({
+      publicKey: {
+        challenge: b64urlToBuffer(startData.challenge),
+        rpId: startData.rpId,
+        allowCredentials: [{ type:'public-key', id: b64urlToBuffer(startData.allowCredentialId) }],
+        userVerification: 'required',
+        timeout: 60000
+      }
+    });
+
+    const finishRes = await fetch('/api/auth/login_finish', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, credentialId: credential.id })
+    });
+    const finishData = await finishRes.json();
+    if(!finishRes.ok || !finishData.ok){ showAuthError(finishData.error || 'تعذّر تسجيل الدخول'); return; }
+
+    showMainApp(finishData);
+  }catch(e){
+    console.error(e);
+    if(e.name === 'NotAllowedError') showAuthError('تم إلغاء عملية تسجيل الدخول');
+    else showAuthError('تعذّر تسجيل الدخول — تأكد من تشغيل node server.js');
+  }
+});
+
+/* ---- Logout ---- */
+document.getElementById('logout-btn').addEventListener('click', async ()=>{
+  try{ await fetch('/api/auth/logout', { method:'POST' }); }
+  catch(e){ /* ignore — we're logging out client-side regardless */ }
+  document.getElementById('login-username').value = '';
+  hideAuthError();
+  showAuthScreen();
+});
+
+async function checkAuth(){
+  try{
+    const res = await fetch('/api/auth/me');
+    const data = await res.json();
+    if(data.loggedIn) showMainApp(data);
+    else showAuthScreen();
+  }catch(e){
+    console.error(e);
+    showAuthScreen();
+    showAuthError('تعذّر الاتصال بالخادم — تأكد من تشغيل node server.js');
+  }
+}
+
+/* ---------------- App data ---------------- */
+/* All data is saved through the local server (see server.js): every change
+   is POSTed to /api/save, which writes straight into epms-data.json on
+   disk. No browser downloads, no file pickers — just the API. Make sure
+   `node server.js` is running and this page was opened at
+   http://localhost:3000. You can always check the current saved data
+   yourself by visiting http://localhost:3000/api/data (or /epms-data.json)
+   directly in a browser tab. */
+const FILE_NAME = 'epms-data.json';
+let appData = {
+  vehicles: [{ plate:'أبوظبي · 7 · 23841', type:'سيدان', color:'أسود معدني', floor:'الطابق الأول', status:'نشط' }],
+  visitors: [],
+  bookings: []
+};
+
+function normalizeAppData(){
+  appData.vehicles = appData.vehicles || [];
+  appData.visitors = appData.visitors || [];
+  appData.bookings = appData.bookings || [];
+}
+
+/* Called immediately after every add (vehicle, visitor, booking). */
+async function persistAppData(label){
+  try{
+    const res = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(appData)
+    });
+    if(res.ok){
+      showToast((label || 'تم الحفظ') + ' في ' + FILE_NAME + ' ✓');
+    } else {
+      showToast('تعذّر الحفظ — تأكد من تشغيل node server.js');
+    }
+  }catch(e){
+    console.error('Save error:', e);
+    showToast('تعذّر الاتصال بالخادم — تأكد من تشغيل node server.js');
+  }
+}
+
+async function loadPersistedAppData(){
+  try{
+    const res = await fetch('/api/data');
+    if(res.ok){
+      appData = await res.json();
+      normalizeAppData();
+      return true;
+    }
+  }catch(e){
+    console.error('Load error:', e);
+    showToast('تعذّر الاتصال بالخادم — تأكد من تشغيل node server.js');
+  }
+  return false;
+}
+
+/* ---------------- Navigation ---------------- */
+const titles = {
+  dashboard: ['لوحة المراقبة والتوجيه الفوري', 'نظرة لحظية على إشغال المواقف وحركة الدخول عبر بوابات ANPR'],
+  booking: ['الحجز الذكي المسبق للمواقف', 'خصّص موقفك مسبقًا وفق جدول حضورك اليومي أو المرن'],
+  vehicle: ['مركبتي وتصاريحي', 'إدارة بيانات المركبة والتصريح المرتبط بسجلك الوظيفي'],
+  visitors: ['تصاريح الزوار', 'إصدار ومتابعة تصاريح دخول الزوار والمؤتمرات'],
+  violations: ['المخالفات والإنذارات الآلية', 'متابعة حالات الوقوف الخاطئ وتجاوز المدة المحددة'],
+  security: ['الأمان والمصادقة الثنائية', 'إدارة رمز TOTP وبصمة الجهاز وسجلّ آخر المحاولات'],
+};
+document.getElementById('nav').addEventListener('click', (e)=>{
+  const item = e.target.closest('.nav-item');
+  if(!item) return;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  item.classList.add('active');
+  const view = item.dataset.view;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  document.getElementById('page-title').textContent = titles[view][0];
+  document.getElementById('page-sub').textContent = titles[view][1];
+  if(view === 'security') loadSecurityState();
+});
+
+/* ---------------- Clock ---------------- */
+function updateClock(){
+  const now = new Date();
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' };
+  document.getElementById('clock').textContent = now.toLocaleDateString('ar-SA', opts);
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+/* ---------------- Toast ---------------- */
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+/* ---------------- Dashboard: floors ---------------- */
+const floors = [
+  { name:'الطابق الأرضي', total:140, occupied:118, color:'var(--rust)' },
+  { name:'الطابق الأول', total:120, occupied:94, color:'var(--gold)' },
+  { name:'الطابق الثاني', total:120, occupied:76, color:'var(--copper)' },
+  { name:'السطح', total:100, occupied:41, color:'var(--olive)' },
+];
+const floorsEl = document.getElementById('floors');
+floors.forEach(f=>{
+  const pct = Math.round((f.occupied/f.total)*100);
+  const row = document.createElement('div');
+  row.className = 'floor-row';
+  row.innerHTML = `
+    <div class="floor-name">${f.name}</div>
+    <div class="floor-bar"><div class="floor-bar-fill" style="background:${f.color};"></div></div>
+    <div class="floor-count">${f.occupied}/${f.total} · ${pct}%</div>
+  `;
+  floorsEl.appendChild(row);
+  requestAnimationFrame(()=>{
+    setTimeout(()=>{ row.querySelector('.floor-bar-fill').style.width = pct+'%'; }, 120);
+  });
+});
+
+/* ---------------- Dashboard: live ANPR feed ---------------- */
+const namesPool = ['راشد المنصوري','مريم المهيري','سلطان الكعبي','فاطمة الظاهري','خليفة النعيمي','شيخة الفلاسي','ماجد المرزوقي','عائشة السويدي','حمدان الشامسي','هند الرميثي'];
+const platesPool = ['أبوظبي · 7 · 23841','دبي · A · 77213','أبوظبي · 12 · 90876','الشارقة · 2 · 15820','دبي · N · 44210','عجمان · 4 · 60231','أبوظبي · 3 · 51042','رأس الخيمة · 9 · 28715'];
+function randomFeedItem(){
+  const ok = Math.random() > 0.15;
+  return {
+    name: namesPool[Math.floor(Math.random()*namesPool.length)],
+    plate: platesPool[Math.floor(Math.random()*platesPool.length)],
+    ok
+  };
+}
+const feedEl = document.getElementById('feed');
+function pushFeedItem(){
+  const item = randomFeedItem();
+  const now = new Date();
+  const time = now.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  const row = document.createElement('div');
+  row.className = 'feed-item';
+  row.innerHTML = `
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="plate">${item.plate}</span>
+      <span style="color:var(--ink-soft);">${item.name}</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span style="color:var(--ink-soft); font-size:11.5px;">${time}</span>
+      <span class="status-tag ${item.ok?'status-ok':'status-bad'}">${item.ok?'مصرح له':'مرفوض'}</span>
+    </div>
+  `;
+  feedEl.prepend(row);
+  while(feedEl.children.length > 6){ feedEl.removeChild(feedEl.lastChild); }
+}
+for(let i=0;i<5;i++) pushFeedItem();
+setInterval(pushFeedItem, 4200);
+
+/* ---------------- Booking ---------------- */
+const dayChips = document.getElementById('day-chips');
+const days = ['اليوم','غدًا','الأربعاء','الخميس','الأحد','الاثنين','الثلاثاء'];
+days.forEach((d,i)=>{
+  const c = document.createElement('div');
+  c.className = 'chip' + (i===0?' active':'');
+  c.textContent = d;
+  c.addEventListener('click', ()=>{
+    dayChips.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+  });
+  dayChips.appendChild(c);
+});
+
+const floorChips = document.getElementById('floor-chips');
+const floorNames = ['الطابق الأرضي','الطابق الأول','الطابق الثاني','السطح'];
+let currentFloorIdx = 0;
+floorNames.forEach((f,i)=>{
+  const c = document.createElement('div');
+  c.className = 'chip' + (i===0?' active':'');
+  c.textContent = f;
+  c.addEventListener('click', ()=>{
+    floorChips.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+    currentFloorIdx = i;
+    renderSpots();
+  });
+  floorChips.appendChild(c);
+});
+
+const spotGrid = document.getElementById('spot-grid');
+const summaryEl = document.getElementById('booking-summary');
+const confirmBtn = document.getElementById('confirm-btn');
+let selectedSpot = null;
+let spotStates = {};
+
+function seedSpots(floorIdx){
+  const key = 'f'+floorIdx;
+  if(spotStates[key]) return spotStates[key];
+  const arr = [];
+  for(let i=0;i<32;i++){
+    const r = Math.random();
+    let state = 'available';
+    if(r < 0.42) state = 'occupied';
+    else if(r < 0.5) state = 'reserved';
+    arr.push(state);
+  }
+  spotStates[key] = arr;
+  return arr;
+}
+
+function renderSpots(){
+  const key = 'f'+currentFloorIdx;
+  const states = seedSpots(currentFloorIdx);
+  spotGrid.innerHTML = '';
+  selectedSpot = null;
+  updateSummary();
+  states.forEach((state, idx)=>{
+    const s = document.createElement('div');
+    s.className = 'spot ' + state;
+    s.textContent = floorNames[currentFloorIdx][6] + (idx+1);
+    s.dataset.idx = idx;
+    if(state === 'available'){
+      s.addEventListener('click', ()=>{
+        spotGrid.querySelectorAll('.spot.selected').forEach(x=>{
+          x.classList.remove('selected');
+          x.classList.add('available');
+        });
+        s.classList.remove('available');
+        s.classList.add('selected');
+        selectedSpot = { floor: floorNames[currentFloorIdx], idx };
+        updateSummary();
+      });
+    }
+    spotGrid.appendChild(s);
+  });
+}
+function updateSummary(){
+  if(selectedSpot){
+    summaryEl.querySelector('span').textContent = `تم اختيار موقف رقم ${selectedSpot.idx+1} — ${selectedSpot.floor}`;
+    confirmBtn.disabled = false;
+  } else {
+    summaryEl.querySelector('span').textContent = 'لم يتم اختيار أي موقف بعد';
+    confirmBtn.disabled = true;
+  }
+}
+confirmBtn.addEventListener('click', ()=>{
+  if(!selectedSpot) return;
+  const key = 'f'+currentFloorIdx;
+  spotStates[key][selectedSpot.idx] = 'occupied';
+  appData.bookings.push({
+    floor: selectedSpot.floor,
+    spot: selectedSpot.idx + 1,
+    day: dayChips.querySelector('.chip.active').textContent,
+    savedAt: new Date().toISOString()
+  });
+  persistAppData(`تم تأكيد حجز الموقف رقم ${selectedSpot.idx+1} في ${selectedSpot.floor}`);
+  renderSpots();
+});
+renderSpots();
+
+/* ---------------- Vehicles ---------------- */
+const vehicleList = document.getElementById('vehicle-list');
+function renderVehicle(v){
+  const card = document.createElement('div');
+  card.className = 'vehicle-card';
+  card.innerHTML = `
+    <div class="vehicle-top">
+      <span class="vehicle-plate">${v.plate}</span>
+      <span class="badge badge-active">${v.status}</span>
+    </div>
+    <div class="vehicle-meta">
+      <span>${v.type}</span>
+      <span>${v.color}</span>
+      <span>${v.floor}</span>
+    </div>
+  `;
+  vehicleList.appendChild(card);
+}
+function renderAllVehicles(){
+  vehicleList.innerHTML = '';
+  appData.vehicles.forEach(renderVehicle);
+}
+
+document.getElementById('add-vehicle-btn').addEventListener('click', ()=>{
+  const plate = document.getElementById('v-plate').value.trim();
+  if(!plate){ showToast('يرجى إدخال رقم لوحة المركبة'); return; }
+  const vehicle = {
+    plate,
+    type: document.getElementById('v-type').value,
+    color: document.getElementById('v-color').value || 'غير محدد',
+    floor: document.getElementById('v-floor').value,
+    status: 'نشط'
+  };
+  appData.vehicles.push(vehicle);
+  renderVehicle(vehicle);
+  persistAppData('تم تسجيل السيارة');
+  document.getElementById('v-plate').value = '';
+  document.getElementById('v-color').value = '';
+});
+
+/* ---------------- Visitors ---------------- */
+const visitorList = document.getElementById('visitor-list');
+function renderVisitorRow(v){
+  const row = document.createElement('div');
+  row.className = 'visitor-row';
+  row.innerHTML = `
+    <div><strong>${v.name}</strong> <span style="color:var(--ink-soft);">· ${v.purpose}</span></div>
+    <span class="badge badge-active">فعّال</span>
+  `;
+  visitorList.prepend(row);
+}
+function renderAllVisitors(){
+  visitorList.innerHTML = '';
+  appData.visitors.forEach(renderVisitorRow);
+  if(appData.visitors.length){
+    const last = appData.visitors[appData.visitors.length - 1];
+    drawQR();
+    document.getElementById('permit-name').textContent = last.name;
+    document.getElementById('permit-purpose').textContent = last.purpose;
+    document.getElementById('permit-date').textContent = 'تاريخ الزيارة: ' + (last.date || 'اليوم');
+  }
+}
+function drawQR(){
+  const box = document.getElementById('qr-box');
+  box.innerHTML = '';
+  for(let i=0;i<49;i++){
+    const cell = document.createElement('i');
+    const onEdge = i<7 || i>41 || i%7===0 || i%7===6;
+    const fill = Math.random() > 0.42 || (onEdge && Math.random() > 0.3);
+    cell.style.background = fill ? '#3A2A1D' : 'transparent';
+    box.appendChild(cell);
+  }
+}
+drawQR();
+
+document.getElementById('add-guest-btn').addEventListener('click', ()=>{
+  const name = document.getElementById('g-name').value.trim();
+  const email = document.getElementById('g-email').value.trim();
+  const date = document.getElementById('g-date').value;
+  const purpose = document.getElementById('g-purpose').value;
+  if(!name || !email){ showToast('يرجى إدخال اسم وبريد الزائر'); return; }
+
+  drawQR();
+  document.getElementById('permit-name').textContent = name;
+  document.getElementById('permit-purpose').textContent = purpose;
+  document.getElementById('permit-date').textContent = date ? ('تاريخ الزيارة: ' + date) : 'تاريخ الزيارة: اليوم';
+
+  const visitor = { name, email, date: date || null, purpose };
+  appData.visitors.push(visitor);
+  renderVisitorRow(visitor);
+  persistAppData('تم إصدار تصريح الزائر');
+
+  document.getElementById('g-name').value = '';
+  document.getElementById('g-email').value = '';
+});
+
+
+
+/* ---------------- Violations ---------------- */
+const violations = [
+  { type:'وقوف خارج المكان المخصص', plate:'دبي · B · 22107', loc:'الطابق الأرضي — قطاع B', time:'اليوم 08:42', resolved:false },
+  { type:'تجاوز المدة المسموحة', plate:'أبوظبي · 5 · 66732', loc:'الطابق الأول — قطاع A', time:'اليوم 07:15', resolved:false },
+  { type:'وقوف في موقف ذوي الإعاقة', plate:'الشارقة · 1 · 44081', loc:'الطابق الأرضي — مدخل رئيسي', time:'أمس 16:30', resolved:true },
+  { type:'دخول بدون تصريح مسبق', plate:'أبوظبي · 9 · 88910', loc:'بوابة 2 — الجنوبية', time:'أمس 13:05', resolved:true },
+  { type:'تجاوز المدة المسموحة', plate:'عجمان · 6 · 33579', loc:'السطح — قطاع C', time:'أمس 11:48', resolved:false },
+];
+const violationList = document.getElementById('violation-list');
+violations.forEach(v=>{
+  const row = document.createElement('div');
+  row.className = 'violation-row';
+  row.innerHTML = `
+    <div class="violation-icon ${v.resolved?'resolved':''}">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 20h20L12 3z"/><line x1="12" y1="10" x2="12" y2="14.5"/><circle cx="12" cy="17.2" r=".4" fill="currentColor"/></svg>
+    </div>
+    <div class="violation-main">
+      <strong>${v.type}</strong>
+      <div>${v.plate} · ${v.loc} · ${v.time}</div>
+    </div>
+    <div class="violation-status" style="background:${v.resolved?'var(--olive-soft)':'var(--rust-soft)'}; color:${v.resolved?'#4c5934':'var(--rust)'};">
+      ${v.resolved ? 'تمت المعالجة' : 'قيد المعالجة'}
+    </div>
+  `;
+  violationList.appendChild(row);
+});
+
+/* ---------------- Security / 2FA ---------------- */
+const attemptLabels = {
+  totp: 'TOTP',
+  webauthn: 'بصمة الجهاز',
+  auth: 'الحساب'
+};
+const attemptActionLabels = {
+  setup: 'إعداد',
+  verify: 'تحقق',
+  register: 'تسجيل',
+  delete: 'حذف',
+  signup: 'إنشاء حساب',
+  login: 'تسجيل دخول'
+};
+
+function renderAttempts(attempts){
+  const list = document.getElementById('security-attempts-list');
+  list.innerHTML = '';
+  if(!attempts || !attempts.length){
+    list.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">لا توجد محاولات مسجّلة بعد.</p>';
+    return;
+  }
+  attempts.forEach(a=>{
+    const ok = a.result === 'success';
+    const row = document.createElement('div');
+    row.className = 'attempt-row';
+    const time = new Date(a.time).toLocaleString('ar-SA', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'});
+    row.innerHTML = `
+      <div class="attempt-icon" style="background:${ok?'var(--olive-soft)':'var(--rust-soft)'}; color:${ok?'#4c5934':'var(--rust)'};">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${ok ? '<path d="M20 6 9 17l-5-5"/>' : '<path d="M18 6 6 18M6 6l12 12"/>'}</svg>
+      </div>
+      <div class="attempt-main">
+        <strong>${attemptLabels[a.type] || a.type} · ${attemptActionLabels[a.action] || a.action}</strong>
+        <div>${a.detail || ''} · ${time}</div>
+      </div>
+      <div class="attempt-result" style="background:${ok?'var(--olive-soft)':'var(--rust-soft)'}; color:${ok?'#4c5934':'var(--rust)'};">
+        ${ok ? 'نجاح' : 'فشل'}
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+async function loadSecurityState(){
+  try{
+    const res = await fetch('/api/security');
+    if(!res.ok) throw new Error('bad response');
+    const data = await res.json();
+
+    // TOTP status
+    const totpBadge = document.getElementById('totp-status-badge');
+    if(data.totp.enabled){
+      totpBadge.textContent = 'مفعّل';
+      totpBadge.style.background = 'var(--olive-soft)';
+      totpBadge.style.color = '#4c5934';
+      document.getElementById('totp-secret-box').style.display = 'none';
+    } else {
+      totpBadge.textContent = 'غير مفعّل';
+      totpBadge.style.background = 'var(--card)';
+      totpBadge.style.color = 'var(--ink-soft)';
+      if(data.totp.secret){
+        document.getElementById('totp-secret-box').style.display = 'block';
+        document.getElementById('totp-secret-text').textContent = data.totp.secret;
+        document.getElementById('totp-otpauth-text').textContent = data.totp.otpauthUrl;
+      }
+    }
+
+    // WebAuthn status
+    const waBadge = document.getElementById('webauthn-status-badge');
+    const waInfoBox = document.getElementById('webauthn-info-box');
+    if(data.webauthn && data.webauthn.credentialId){
+      waBadge.textContent = 'مسجّلة';
+      waBadge.style.background = 'var(--olive-soft)';
+      waBadge.style.color = '#4c5934';
+      waInfoBox.style.display = 'block';
+      const regDate = new Date(data.webauthn.registeredAt).toLocaleString('ar-SA', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'});
+      document.getElementById('webauthn-info-text').textContent =
+        `${data.webauthn.label || 'هذا الجهاز'} · مسجّلة بتاريخ ${regDate} · معرّف: ${data.webauthn.credentialId.slice(0,16)}…`;
+    } else {
+      waBadge.textContent = 'غير مسجّلة';
+      waBadge.style.background = 'var(--card)';
+      waBadge.style.color = 'var(--ink-soft)';
+      waInfoBox.style.display = 'none';
+    }
+
+    renderAttempts(data.attempts);
+  }catch(e){
+    console.error('Security load error:', e);
+    showToast('تعذّر الاتصال بالخادم — تأكد من تشغيل node server.js');
+  }
+}
+
+/* ---- TOTP setup ---- */
+document.getElementById('totp-setup-btn').addEventListener('click', async ()=>{
+  try{
+    const res = await fetch('/api/totp_setup', { method:'POST' });
+    if(!res.ok) throw new Error('setup failed');
+    const data = await res.json();
+    document.getElementById('totp-secret-box').style.display = 'block';
+    document.getElementById('totp-secret-text').textContent = data.secret;
+    document.getElementById('totp-otpauth-text').textContent = data.otpauthUrl;
+    showToast('تم إنشاء رمز سرّي جديد — أدخله في تطبيق المصادقة ثم تحقق منه ✓');
+    loadSecurityState();
+  }catch(e){
+    console.error(e);
+    showToast('تعذّر إنشاء رمز TOTP — تأكد من تشغيل node server.js');
+  }
+});
+
+/* ---- TOTP verify ---- */
+document.getElementById('totp-verify-btn').addEventListener('click', async ()=>{
+  const code = document.getElementById('totp-code-input').value.trim();
+  if(!/^\d{6}$/.test(code)){ showToast('أدخل رمزًا مكوّنًا من 6 أرقام'); return; }
+  try{
+    const res = await fetch('/api/totp_verify', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ code })
+    });
+    const data = await res.json();
+    if(data.ok){
+      showToast('تم التحقق من الرمز وتفعيل TOTP بنجاح ✓');
+      document.getElementById('totp-code-input').value = '';
+    } else {
+      showToast('الرمز غير صحيح أو منتهي الصلاحية');
+    }
+    loadSecurityState();
+  }catch(e){
+    console.error(e);
+    showToast('تعذّر التحقق — تأكد من تشغيل node server.js');
+  }
+});
+
+/* ---- WebAuthn register ---- */
+document.getElementById('webauthn-register-btn').addEventListener('click', async ()=>{
+  if(!window.PublicKeyCredential){
+    showToast('متصفحك لا يدعم WebAuthn');
+    return;
+  }
+  try{
+    const optRes = await fetch('/api/webauthn_register_options', { method:'POST' });
+    if(!optRes.ok) throw new Error('options failed');
+    const opts = await optRes.json();
+
+    const credential = await navigator.credentials.create({
+      publicKey: {
+        challenge: b64urlToBuffer(opts.challenge),
+        rp: { name: opts.rpName, id: opts.rpId },
+        user: {
+          id: b64urlToBuffer(opts.userId),
+          name: opts.userName,
+          displayName: opts.userDisplayName
+        },
+        pubKeyCredParams: [
+          { type:'public-key', alg:-7 },   // ES256
+          { type:'public-key', alg:-257 }  // RS256
+        ],
+        authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required' },
+        timeout: 60000,
+        attestation: 'none'
+      }
+    });
+
+    const label = /Mac/.test(navigator.platform) ? 'Touch ID' :
+                  /Win/.test(navigator.platform) ? 'Windows Hello' : 'بصمة الجهاز';
+
+    const regRes = await fetch('/api/webauthn_register', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ id: credential.id, label })
+    });
+    const regData = await regRes.json();
+    if(regData.ok){
+      showToast('تم تسجيل بصمة الجهاز بنجاح ✓');
+    } else {
+      showToast('تعذّر حفظ بصمة الجهاز على الخادم');
+    }
+    loadSecurityState();
+  }catch(e){
+    console.error(e);
+    if(e.name === 'NotAllowedError'){
+      showToast('تم إلغاء عملية التسجيل');
+    } else {
+      showToast('تعذّر تسجيل بصمة الجهاز — تأكد من تشغيل node server.js وأن جهازك يدعم WebAuthn');
+    }
+  }
+});
+
+/* ---- WebAuthn delete (permanent) ---- */
+document.getElementById('webauthn-delete-btn').addEventListener('click', async ()=>{
+  if(!confirm('سيتم حذف بصمة الجهاز المسجّلة نهائيًا من الخادم. هل تريد المتابعة؟')) return;
+  try{
+    const res = await fetch('/api/webauthn_delete', { method:'DELETE' });
+    const data = await res.json();
+    if(data.ok){
+      showToast('تم حذف الواصف نهائيًا ✓');
+    } else {
+      showToast('تعذّر حذف الواصف');
+    }
+    loadSecurityState();
+  }catch(e){
+    console.error(e);
+    showToast('تعذّر الاتصال بالخادم — تأكد من تشغيل node server.js');
+  }
+});
+
+/* ---------------- Startup ---------------- */
+/* Checks whether a session cookie is already valid (so a page refresh
+   doesn't force signing in again) and shows the auth screen or the app
+   accordingly. App data itself (vehicles/visitors/bookings) loads from the
+   server in parallel — it's shared demo data, not tied to who's logged in. */
+(async function startup(){
+  checkAuth();
+  await loadPersistedAppData();
+  renderAllVehicles();
+  renderAllVisitors();
+})();
+
+</script>
+</body>
+</html>
