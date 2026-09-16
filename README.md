@@ -1,77 +1,80 @@
 # ركن (Rukn) — Employee Parking Management System
 
-## Run it
+A single, fully self-contained HTML file. No server, no build step, no dependencies —
+just `index.html`. This makes it deployable anywhere that can host static files,
+**including GitHub Pages.**
 
-You need [Node.js](https://nodejs.org) installed — nothing else, no `npm install` required.
+## Deploy on GitHub Pages
 
-1. Put `server.js`, `index.html`, and `epms-data.json` in the same folder.
-2. Open a terminal in that folder and run:
-   ```
-   node server.js
-   ```
-3. Open **http://localhost:3000** in your browser.
+1. Push `index.html` to a GitHub repository (at the repo root, or in whatever folder
+   you point Pages at).
+2. In the repo, go to **Settings → Pages**, set the source branch (e.g. `main`) and
+   folder (`/root`), and save.
+3. GitHub will publish it at `https://<your-username>.github.io/<repo-name>/`.
 
-## How saving works
+That's it — no server process to keep running, no `node` command needed. Any static host
+works the same way (Netlify, Vercel, S3, your own web server, etc.) since the whole app is
+one HTML file.
 
-Every time you register a vehicle, issue a visitor permit, or confirm a booking in the app,
-the page sends the full data set to `POST /api/save`, and the server writes it straight into
-`epms-data.json` on your disk — instantly, with no browser download or file picker involved.
+## How it works — everything runs in your browser
 
-You can also watch it happen live:
-- The terminal running `node server.js` logs a line every time the file is updated.
-- Click **"عرض JSON عبر API"** in the top bar to open `/api/data` in a new tab and see the
-  current saved data straight from the server.
-- Open `epms-data.json` in a text editor to watch the file change in real time.
+There is no backend. All data — accounts, vehicles, visitor permits, bookings, TOTP
+secrets, and WebAuthn credentials — is stored in the browser's `localStorage`, scoped to
+whichever device and browser you're using.
 
-Other endpoints:
-- `GET /api/data` — returns the current contents of `epms-data.json`
-- `GET /epms-data.json` — same thing, served as a raw file
-
-## Note
-
-The app requires `node server.js` to be running — it saves and loads data purely through the
-API, with no browser-storage or download fallback. If the server isn't reachable, saves will
-fail with a toast telling you to start it.
+**What that means in practice:**
+- Data is saved instantly (no network round-trip needed) every time you register a
+  vehicle, add a visitor, or confirm a booking.
+- Data does **not** sync across devices or browsers — an account created in Chrome on
+  your laptop won't be visible in Safari or on your phone. It's local to that one browser.
+- Clearing your browser's site data / cookies / cache for this page will erase everything.
+- Click **"تنزيل نسخة JSON"** in the top bar any time to export the current data as a real
+  `.json` file you can keep or share.
 
 ## تسجيل الدخول / إنشاء حساب (Sign in / Sign up)
 
-The app now opens on a sign-in screen — there's no password field anywhere; accounts are
-created and logged into purely with a passkey (your device's fingerprint / Face ID / Windows
-Hello), using the browser's real WebAuthn API.
+No password field anywhere — accounts are created and logged into purely with a passkey
+(your device's fingerprint / Face ID / Windows Hello), using the browser's real WebAuthn
+API (`navigator.credentials.create` / `.get`).
 
 - **إنشاء حساب (Sign up)** — enter a full name and username, click the button, and your OS
-  will prompt for your fingerprint/Face ID/Windows Hello. That registers a passkey tied to the
-  new account and logs you straight in.
-- **تسجيل الدخول (Sign in)** — enter your username and click the button; you'll get the same
-  biometric prompt, and on success you're taken into the app.
-- Sessions are a random token in an httpOnly cookie, so refreshing the page keeps you signed
-  in until you click the logout icon next to your name.
-- Every signup/login attempt (success or failure) also shows up in the "سجلّ آخر المحاولات"
-  log on the Security tab, alongside the TOTP/WebAuthn-device events.
+  prompts for your fingerprint/Face ID/Windows Hello. That registers a passkey tied to the
+  new account (stored in `localStorage`) and logs you straight in.
+- **تسجيل الدخول (Sign in)** — enter your username and click the button; same biometric
+  prompt, checked against the credential stored for that account in this browser.
+- Your session persists across page refreshes (until you click the logout icon) via
+  `localStorage`, not a cookie — again, no server involved.
 
-**Caveat:** as with the WebAuthn device-registration feature, login verification here is
-simplified — it checks that the credential id returned by the browser matches the one stored
-for that username, but doesn't cryptographically verify the signed assertion. A real product
-would use a library that does full WebAuthn verification before trusting a login.
+**WebAuthn requires a secure context** — either `https://` (which GitHub Pages provides
+automatically) or `http://localhost` during local testing. It will not work if you open the
+file directly from disk (`file:///...`) or over plain `http://` on a non-localhost address.
+
+**Caveat:** login "verification" here just checks that the credential id the browser
+returns matches the one stored for that username — there's no server to cryptographically
+verify a signed assertion against, since there is no server. This is a genuine passkey
+prompt gating genuine local access control, but it is not hardened the way a real backend
+WebAuthn relying party would be.
 
 ## الأمان والمصادقة الثنائية (Security / 2FA)
 
-A new "الأمان والمصادقة الثنائية" tab adds:
+A separate "الأمان والمصادقة الثنائية" tab, scoped per logged-in account:
 
-- **TOTP** — `totp_setup` (`POST /api/totp_setup`) generates a fresh RFC 6238 secret
-  (Google Authenticator / Authy compatible, HMAC-SHA1, 6 digits, 30s step) and shows it for
-  manual entry into your authenticator app. `totp_verify` (`POST /api/totp_verify`) checks a
-  6-digit code against it (±1 time-step window for clock drift) and marks it enabled on success.
-- **WebAuthn device registration** — the "تسجيل بصمة الجهاز" button calls the browser's real
-  `navigator.credentials.create()` API, so it triggers your OS's actual Touch ID / Face ID /
-  Windows Hello prompt. The returned credential id is stored server-side.
-- **Permanent delete** — "حذف الواصف نهائيًا" removes the stored WebAuthn credential from
-  `epms-data.json` for good (`DELETE /api/webauthn_delete`), after a confirmation prompt.
-- **Attempts log** — every setup/verify/register/delete action is recorded with a timestamp
-  and success/fail result, shown newest-first in the "سجلّ آخر المحاولات" card.
+- **TOTP** — generates a real RFC 6238 secret (Google Authenticator / Authy compatible,
+  HMAC-SHA1, 6 digits, 30-second step) using the browser's Web Crypto API
+  (`crypto.subtle`), shown for manual entry into your authenticator app. Verifying a
+  6-digit code checks it with a ±1 time-step window for clock drift. This math was
+  independently cross-checked against a reference Python implementation and matches
+  exactly.
+- **WebAuthn device registration** — a second, separate passkey you can register in
+  addition to the one used for login (e.g. to simulate adding another trusted device).
+  Also uses the real `navigator.credentials.create()` prompt.
+- **Permanent delete** — removes the stored WebAuthn credential from this browser's
+  `localStorage` for good, after a confirmation prompt.
+- **Attempts log** — every setup/verify/register/delete/login/signup action is recorded
+  with a timestamp and success/fail result, shown newest-first.
 
-**Important caveat:** the WebAuthn implementation here is intentionally minimal for a local
-demo — it stores the credential id but does not parse the COSE public key or cryptographically
-verify attestation/assertion signatures. It's genuinely triggering and tracking real
-platform-authenticator prompts, but a production system should use a vetted library (e.g.
-`@simplewebauthn/server`) to do full verification before trusting a credential for login.
+## Browser support
+
+Needs a modern browser with WebAuthn platform-authenticator support: Chrome, Edge, Safari,
+or Firefox, on a device with Touch ID, Face ID, Windows Hello, or a fingerprint reader set
+up in the OS.
