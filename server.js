@@ -201,6 +201,17 @@ function collectBody(req, cb) {
 }
 
 const server = http.createServer((req, res) => {
+  try {
+    handleRequest(req, res);
+  } catch (e) {
+    console.error(`[${new Date().toLocaleTimeString()}] Unhandled error:`, e);
+    try {
+      sendJSON(res, 500, { ok: false, error: 'Internal server error' });
+    } catch (e2) { /* response already sent — nothing more we can do */ }
+  }
+});
+
+function handleRequest(req, res) {
   const url = req.url.split('?')[0];
 
   // ---- API: read the current data ----
@@ -267,10 +278,15 @@ const server = http.createServer((req, res) => {
   // ---- Sign up, step 2: store the new passkey-backed account and log the user in ----
   if (req.method === 'POST' && url === '/api/auth/signup_finish') {
     return collectBody(req, (err, body) => {
+      const data = readData();
+      if (err) {
+        logAttempt(data, { type: 'auth', action: 'signup', result: 'fail', detail: 'فشل إنشاء الحساب (طلب غير صالح)' });
+        writeData(data);
+        return sendJSON(res, 400, { ok: false, error: 'Invalid JSON' });
+      }
       const username = (body.username || '').trim().toLowerCase();
       const pending = pendingSignups.get(username);
-      const data = readData();
-      if (err || !body.credentialId || !pending) {
+      if (!body.credentialId || !pending) {
         logAttempt(data, { type: 'auth', action: 'signup', result: 'fail', detail: `فشل إنشاء الحساب (${username || 'غير معروف'})` });
         writeData(data);
         return sendJSON(res, 400, { ok: false, error: 'Signup session invalid or expired' });
@@ -298,10 +314,11 @@ const server = http.createServer((req, res) => {
   // ---- Sign in, step 1: look up the account, hand back WebAuthn get() options ----
   if (req.method === 'POST' && url === '/api/auth/login_start') {
     return collectBody(req, (err, body) => {
+      if (err) return sendJSON(res, 400, { ok: false, error: 'Invalid JSON' });
       const username = (body.username || '').trim().toLowerCase();
       const data = readData();
       const user = data.users.find(u => u.username === username);
-      if (err || !user) {
+      if (!user) {
         return sendJSON(res, 404, { ok: false, error: 'لا يوجد حساب بهذا الاسم' });
       }
       const challenge = crypto.randomBytes(32);
@@ -317,12 +334,17 @@ const server = http.createServer((req, res) => {
   // ---- Sign in, step 2: confirm the passkey assertion came back and start a session ----
   if (req.method === 'POST' && url === '/api/auth/login_finish') {
     return collectBody(req, (err, body) => {
+      const data = readData();
+      if (err) {
+        logAttempt(data, { type: 'auth', action: 'login', result: 'fail', detail: 'محاولة دخول فاشلة (طلب غير صالح)' });
+        writeData(data);
+        return sendJSON(res, 400, { ok: false, error: 'Invalid JSON' });
+      }
       const username = (body.username || '').trim().toLowerCase();
       const pending = pendingLogins.get(username);
-      const data = readData();
       const user = data.users.find(u => u.username === username);
 
-      if (err || !user || !pending || !body.credentialId || body.credentialId !== user.credentialId) {
+      if (!user || !pending || !body.credentialId || body.credentialId !== user.credentialId) {
         logAttempt(data, { type: 'auth', action: 'login', result: 'fail', detail: `محاولة دخول فاشلة (${username || 'غير معروف'})` });
         writeData(data);
         return sendJSON(res, 401, { ok: false, error: 'تعذّر التحقق من بصمة الجهاز' });
@@ -467,9 +489,18 @@ const server = http.createServer((req, res) => {
 
   res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
   res.end('Not found');
-});
+}
 
 server.listen(PORT, () => {
   console.log(`ركن (Rukn) EPMS running at http://localhost:${PORT}`);
   console.log(`Saving data to: ${DATA_FILE}`);
+});
+
+// Last-resort safety net: log any truly unexpected error instead of letting
+// it crash the whole server process.
+process.on('uncaughtException', (e) => {
+  console.error(`[${new Date().toLocaleTimeString()}] Uncaught exception (server kept running):`, e);
+});
+process.on('unhandledRejection', (e) => {
+  console.error(`[${new Date().toLocaleTimeString()}] Unhandled promise rejection (server kept running):`, e);
 });
