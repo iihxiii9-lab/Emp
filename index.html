@@ -429,9 +429,9 @@
       <input id="login-username" placeholder="rashed.almansoori" autocomplete="username">
       <button class="btn btn-primary" id="login-btn" style="width:100%; justify-content:center;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg>
-        تسجيل الدخول ببصمة الجهاز
+        <span id="login-btn-label">تسجيل الدخول ببصمة الجهاز</span>
       </button>
-      <p class="auth-hint">سيُطلب منك التحقق ببصمة الجهاز أو Face ID أو Windows Hello — بدون كلمة مرور.</p>
+      <p class="auth-hint" id="login-hint">سيُطلب منك بصمة الجهاز أو Face ID أو Windows Hello — تُسجَّل أول مرة وتُستخدم للتحقق بعد ذلك.</p>
     </div>
 
     <div class="auth-panel" id="auth-panel-signup">
@@ -443,7 +443,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
         إنشاء حساب وتسجيل بصمة الجهاز
       </button>
-      <p class="auth-hint">سيتم تسجيل بصمة جهازك كطريقة الدخول الوحيدة لهذا الحساب.</p>
+      <p class="auth-hint">لا حاجة لبصمة جهازك الآن — سيتم تسجيلها تلقائيًا عند أول تسجيل دخول لهذا الحساب.</p>
     </div>
 
     <div class="auth-error" id="auth-error"></div>
@@ -501,10 +501,10 @@
       </div>
       <div class="topbar-right">
         <div class="pill" id="clock">—</div>
-        <a class="btn btn-ghost btn-sm" id="view-json-btn" href="/api/data" target="_blank" rel="noopener" title="عرض محتوى epms-data.json الحالي عبر API">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/></svg>
-          عرض JSON عبر API
-        </a>
+        <button class="btn btn-ghost btn-sm" id="download-json-btn" title="تنزيل نسخة .json من البيانات المحفوظة في هذا المتصفح">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>
+          تنزيل نسخة JSON
+        </button>
         <div class="avatar">
           <div class="avatar-img" id="avatar-img">؟</div>
           <div>
@@ -847,6 +847,25 @@
 <div class="toast" id="toast"></div>
 
 <script>
+/* ---------------- Local storage (this app is now 100% static — everything
+   lives in the browser via localStorage, so it can be hosted anywhere,
+   including GitHub Pages, with no backend at all). ---------------- */
+const LS_USERS = 'epms_users';
+const LS_SESSION = 'epms_session';
+const LS_APPDATA = 'epms_appdata';
+const LS_SECURITY = 'epms_security';
+
+function lsGet(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  }catch(e){ return fallback; }
+}
+function lsSet(key, value){
+  try{ localStorage.setItem(key, JSON.stringify(value)); }
+  catch(e){ console.error('localStorage error:', e); showToast('تعذّر الحفظ في هذا المتصفح'); }
+}
+
 /* ---------------- Auth (sign in / sign up with passkey) ---------------- */
 function b64urlToBuffer(base64url){
   const padding = '='.repeat((4 - base64url.length % 4) % 4);
@@ -862,6 +881,16 @@ function bufferToB64url(buf){
   for(let i=0;i<bytes.byteLength;i++) str += String.fromCharCode(bytes[i]);
   return btoa(str).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
+
+function getUsers(){ return lsGet(LS_USERS, []); }
+function saveUsers(users){ lsSet(LS_USERS, users); }
+function getSessionUsername(){ return localStorage.getItem(LS_SESSION); }
+function setSessionUsername(username){
+  if(username) localStorage.setItem(LS_SESSION, username);
+  else localStorage.removeItem(LS_SESSION);
+}
+
+let currentUsername = null;
 
 function showAuthError(msg){
   const el = document.getElementById('auth-error');
@@ -883,6 +912,7 @@ function showAuthScreen(){
   document.getElementById('main-app').style.display = 'none';
 }
 function showMainApp(user){
+  currentUsername = user.username;
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('main-app').style.display = 'flex';
   document.getElementById('avatar-name').textContent = user.displayName;
@@ -906,124 +936,164 @@ function deviceLabel(){
          /Win/.test(navigator.platform) ? 'Windows Hello' : 'بصمة الجهاز';
 }
 
-/* ---- Sign up: create account + register passkey in one flow ---- */
-document.getElementById('signup-btn').addEventListener('click', async ()=>{
+function describeAuthError(e){
+  if(e.name === 'NotAllowedError') return 'تم إلغاء العملية أو انتهت مهلة الانتظار للتحقق من بصمة الجهاز';
+  if(e.name === 'SecurityError') return 'اسم النطاق الحالي لا يدعم WebAuthn (يلزم HTTPS أو localhost)';
+  if(e.name === 'NotSupportedError') return 'جهازك لا يملك بصمة/Face ID/Windows Hello مُعدّة، أو المتصفح لا يدعمها';
+  if(e.name === 'InvalidStateError') return 'هذا الجهاز مسجّل بالفعل على هذا الحساب';
+  return 'خطأ غير متوقع: ' + (e.message || e.name || 'غير معروف');
+}
+
+/* ---- Sign up: create account + register passkey, all in the browser ---- */
+document.getElementById('signup-btn').addEventListener('click', ()=>{
   hideAuthError();
   const displayName = document.getElementById('signup-displayname').value.trim();
   const username = document.getElementById('signup-username').value.trim().toLowerCase();
   if(!displayName || !username){ showAuthError('الرجاء تعبئة الاسم الكامل واسم المستخدم'); return; }
-  if(!window.PublicKeyCredential){ showAuthError('متصفحك لا يدعم تسجيل الدخول ببصمة الجهاز (WebAuthn)'); return; }
+  if(!window.PublicKeyCredential){ showAuthError('متصفحك لا يدعم تسجيل الدخول ببصمة الجهاز (WebAuthn)، وستحتاجه عند تسجيل الدخول لاحقًا'); return; }
 
-  try{
-    const startRes = await fetch('/api/auth/signup_start', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, displayName })
-    });
-    const startData = await startRes.json();
-    if(!startRes.ok){ showAuthError(startData.error || 'تعذّر بدء إنشاء الحساب'); return; }
+  const users = getUsers();
+  if(users.some(u => u.username === username)){ showAuthError('اسم المستخدم مستخدم بالفعل'); return; }
 
-    const credential = await navigator.credentials.create({
-      publicKey: {
-        challenge: b64urlToBuffer(startData.challenge),
-        rp: { name: startData.rpName, id: startData.rpId },
-        user: {
-          id: b64urlToBuffer(startData.userId),
-          name: startData.userName,
-          displayName: startData.userDisplayName
-        },
-        pubKeyCredParams: [ { type:'public-key', alg:-7 }, { type:'public-key', alg:-257 } ],
-        authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required' },
-        timeout: 60000,
-        attestation: 'none'
-      }
-    });
+  // No passkey is created here — only the account. The passkey is created
+  // the first time this account signs in (see the login handler below).
+  const user = {
+    username, displayName,
+    credentialId: null,
+    label: null,
+    createdAt: new Date().toISOString()
+  };
+  users.push(user);
+  saveUsers(users);
+  logAttempt(username, { type:'auth', action:'signup', result:'success', detail:`تم إنشاء حساب جديد: ${username}` });
 
-    const finishRes = await fetch('/api/auth/signup_finish', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, credentialId: credential.id, label: deviceLabel() })
-    });
-    const finishData = await finishRes.json();
-    if(!finishRes.ok || !finishData.ok){ showAuthError(finishData.error || 'تعذّر إكمال إنشاء الحساب'); return; }
-
-    showMainApp(finishData);
-  }catch(e){
-    console.error(e);
-    if(e.name === 'NotAllowedError') showAuthError('تم إلغاء تسجيل بصمة الجهاز');
-    else showAuthError('تعذّر إنشاء الحساب — تأكد من تشغيل node server.js');
-  }
+  showToast('تم إنشاء الحساب — سجّل الدخول الآن لتسجيل بصمة جهازك ✓');
+  hideAuthError();
+  document.querySelector('.auth-tab[data-tab="login"]').click();
+  document.getElementById('login-username').value = username;
+  updateLoginAffordance();
 });
 
-/* ---- Sign in: authenticate purely with the registered passkey ---- */
+/* ---- Sign in: registers the passkey the first time, verifies it every time after ---- */
+/* Update the sign-in button/hint live so it's clear whether clicking it
+   will CREATE a new passkey (first sign-in for that account) or VERIFY an
+   existing one — instead of the same generic label either way. */
+function updateLoginAffordance(){
+  const username = document.getElementById('login-username').value.trim().toLowerCase();
+  const labelEl = document.getElementById('login-btn-label');
+  const hintEl = document.getElementById('login-hint');
+  if(!username){
+    labelEl.textContent = 'تسجيل الدخول ببصمة الجهاز';
+    hintEl.textContent = 'سيُطلب منك بصمة الجهاز أو Face ID أو Windows Hello — تُسجَّل أول مرة وتُستخدم للتحقق بعد ذلك.';
+    return;
+  }
+  const user = getUsers().find(u => u.username === username);
+  if(!user){
+    labelEl.textContent = 'تسجيل الدخول ببصمة الجهاز';
+    hintEl.textContent = 'لا يوجد حساب بهذا الاسم في هذا المتصفح — تحقق من الاسم أو أنشئ حسابًا جديدًا.';
+  } else if(!user.credentialId){
+    labelEl.textContent = 'إنشاء بصمة الجهاز والدخول';
+    hintEl.textContent = 'هذا أول دخول لهذا الحساب — سيُطلب منك بصمة الجهاز أو Face ID أو Windows Hello لإنشائها الآن.';
+  } else {
+    labelEl.textContent = 'تسجيل الدخول ببصمة الجهاز';
+    hintEl.textContent = `سيُطلب منك التحقق عبر ${user.label || 'بصمة الجهاز'} المسجّلة لهذا الحساب.`;
+  }
+}
+document.getElementById('login-username').addEventListener('input', updateLoginAffordance);
+document.querySelectorAll('.auth-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{ if(tab.dataset.tab === 'login') updateLoginAffordance(); });
+});
+
 document.getElementById('login-btn').addEventListener('click', async ()=>{
   hideAuthError();
   const username = document.getElementById('login-username').value.trim().toLowerCase();
   if(!username){ showAuthError('أدخل اسم المستخدم'); return; }
   if(!window.PublicKeyCredential){ showAuthError('متصفحك لا يدعم تسجيل الدخول ببصمة الجهاز (WebAuthn)'); return; }
 
-  try{
-    const startRes = await fetch('/api/auth/login_start', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username })
-    });
-    const startData = await startRes.json();
-    if(!startRes.ok){ showAuthError(startData.error || 'لا يوجد حساب بهذا الاسم'); return; }
+  const users = getUsers();
+  const user = users.find(u => u.username === username);
+  if(!user){ showAuthError('لا يوجد حساب بهذا الاسم في هذا المتصفح'); return; }
 
+  try{
+    if(!user.credentialId){
+      /* First sign-in for this account: create the passkey now. */
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+      const userIdBytes = new TextEncoder().encode(username + ':' + Date.now());
+
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          challenge,
+          rp: { name: 'Rukn EPMS', id: location.hostname },
+          user: { id: userIdBytes, name: username, displayName: user.displayName },
+          pubKeyCredParams: [ { type:'public-key', alg:-7 }, { type:'public-key', alg:-257 } ],
+          authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required' },
+          timeout: 60000,
+          attestation: 'none'
+        }
+      });
+
+      user.credentialId = credential.id;
+      user.label = deviceLabel();
+      saveUsers(users);
+
+      setSessionUsername(username);
+      logAttempt(username, { type:'auth', action:'login', result:'success', detail:`تسجيل الدخول الأول وتسجيل بصمة الجهاز: ${username}` });
+      showToast('تم تسجيل بصمة جهازك وتسجيل الدخول بنجاح ✓');
+      showMainApp(user);
+      return;
+    }
+
+    /* Returning sign-in: verify against the passkey already on file. */
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
     const credential = await navigator.credentials.get({
       publicKey: {
-        challenge: b64urlToBuffer(startData.challenge),
-        rpId: startData.rpId,
-        allowCredentials: [{ type:'public-key', id: b64urlToBuffer(startData.allowCredentialId) }],
+        challenge,
+        rpId: location.hostname,
+        allowCredentials: [{ type:'public-key', id: b64urlToBuffer(user.credentialId) }],
         userVerification: 'required',
         timeout: 60000
       }
     });
 
-    const finishRes = await fetch('/api/auth/login_finish', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, credentialId: credential.id })
-    });
-    const finishData = await finishRes.json();
-    if(!finishRes.ok || !finishData.ok){ showAuthError(finishData.error || 'تعذّر تسجيل الدخول'); return; }
+    if(credential.id !== user.credentialId){
+      logAttempt(username, { type:'auth', action:'login', result:'fail', detail:`محاولة دخول فاشلة (${username})` });
+      showAuthError('تعذّر التحقق من بصمة الجهاز');
+      return;
+    }
 
-    showMainApp(finishData);
+    setSessionUsername(username);
+    logAttempt(username, { type:'auth', action:'login', result:'success', detail:`تسجيل دخول: ${username}` });
+    showMainApp(user);
   }catch(e){
     console.error(e);
-    if(e.name === 'NotAllowedError') showAuthError('تم إلغاء عملية تسجيل الدخول');
-    else showAuthError('تعذّر تسجيل الدخول — تأكد من تشغيل node server.js');
+    logAttempt(username, { type:'auth', action:'login', result:'fail', detail:`محاولة دخول فاشلة (${username})` });
+    showAuthError(describeAuthError(e));
   }
 });
 
 /* ---- Logout ---- */
-document.getElementById('logout-btn').addEventListener('click', async ()=>{
-  try{ await fetch('/api/auth/logout', { method:'POST' }); }
-  catch(e){ /* ignore — we're logging out client-side regardless */ }
+document.getElementById('logout-btn').addEventListener('click', ()=>{
+  setSessionUsername(null);
+  currentUsername = null;
   document.getElementById('login-username').value = '';
   hideAuthError();
   showAuthScreen();
 });
 
-async function checkAuth(){
-  try{
-    const res = await fetch('/api/auth/me');
-    const data = await res.json();
-    if(data.loggedIn) showMainApp(data);
-    else showAuthScreen();
-  }catch(e){
-    console.error(e);
-    showAuthScreen();
-    showAuthError('تعذّر الاتصال بالخادم — تأكد من تشغيل node server.js');
+function checkAuth(){
+  const username = getSessionUsername();
+  if(username){
+    const user = getUsers().find(u => u.username === username);
+    if(user){ showMainApp(user); return; }
   }
+  showAuthScreen();
 }
 
 /* ---------------- App data ---------------- */
-/* All data is saved through the local server (see server.js): every change
-   is POSTed to /api/save, which writes straight into epms-data.json on
-   disk. No browser downloads, no file pickers — just the API. Make sure
-   `node server.js` is running and this page was opened at
-   http://localhost:3000. You can always check the current saved data
-   yourself by visiting http://localhost:3000/api/data (or /epms-data.json)
-   directly in a browser tab. */
-const FILE_NAME = 'epms-data.json';
+/* Everything (vehicles, visitors, bookings) is saved to localStorage
+   immediately after every change — this is a static, client-side app with
+   no server, so "the file" is your browser's local storage. Use the
+   "تنزيل نسخة JSON" button any time to export it as a real .json file. */
 let appData = {
   vehicles: [{ plate:'أبوظبي · 7 · 23841', type:'سيدان', color:'أسود معدني', floor:'الطابق الأول', status:'نشط' }],
   visitors: [],
@@ -1037,37 +1107,28 @@ function normalizeAppData(){
 }
 
 /* Called immediately after every add (vehicle, visitor, booking). */
-async function persistAppData(label){
-  try{
-    const res = await fetch('/api/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(appData)
-    });
-    if(res.ok){
-      showToast((label || 'تم الحفظ') + ' في ' + FILE_NAME + ' ✓');
-    } else {
-      showToast('تعذّر الحفظ — تأكد من تشغيل node server.js');
-    }
-  }catch(e){
-    console.error('Save error:', e);
-    showToast('تعذّر الاتصال بالخادم — تأكد من تشغيل node server.js');
-  }
+function persistAppData(label){
+  lsSet(LS_APPDATA, appData);
+  showToast((label || 'تم الحفظ') + ' محليًا في هذا المتصفح ✓');
 }
 
-async function loadPersistedAppData(){
-  try{
-    const res = await fetch('/api/data');
-    if(res.ok){
-      appData = await res.json();
-      normalizeAppData();
-      return true;
-    }
-  }catch(e){
-    console.error('Load error:', e);
-    showToast('تعذّر الاتصال بالخادم — تأكد من تشغيل node server.js');
-  }
+function loadPersistedAppData(){
+  const saved = lsGet(LS_APPDATA, null);
+  if(saved){ appData = saved; normalizeAppData(); return true; }
   return false;
+}
+
+function downloadAppDataAsJSON(){
+  const blob = new Blob([JSON.stringify(appData, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'epms-data.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('تم تنزيل epms-data.json ✓');
 }
 
 /* ---------------- Navigation ---------------- */
@@ -1393,7 +1454,7 @@ violations.forEach(v=>{
   violationList.appendChild(row);
 });
 
-/* ---------------- Security / 2FA ---------------- */
+/* ---------------- Security / 2FA (all local, per-user, in this browser) ---------------- */
 const attemptLabels = {
   totp: 'TOTP',
   webauthn: 'بصمة الجهاز',
@@ -1407,6 +1468,79 @@ const attemptActionLabels = {
   signup: 'إنشاء حساب',
   login: 'تسجيل دخول'
 };
+
+function getSecurityStore(){ return lsGet(LS_SECURITY, {}); }
+function getUserSecurity(username){
+  const store = getSecurityStore();
+  return store[username] || {
+    totp: { secret: null, otpauthUrl: null, enabled: false },
+    webauthn: { credentialId: null, label: null, registeredAt: null },
+    attempts: []
+  };
+}
+function saveUserSecurity(username, sec){
+  const store = getSecurityStore();
+  store[username] = sec;
+  lsSet(LS_SECURITY, store);
+}
+function logAttempt(username, entry){
+  if(!username) return;
+  const sec = getUserSecurity(username);
+  sec.attempts.unshift({ ...entry, time: new Date().toISOString() });
+  sec.attempts = sec.attempts.slice(0, 30);
+  saveUserSecurity(username, sec);
+}
+
+/* ---- Base32 (RFC 4648) — needed for TOTP secrets ---- */
+const B32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function base32Encode(bytes){
+  let bits = 0, value = 0, output = '';
+  for(let i=0;i<bytes.length;i++){
+    value = (value << 8) | bytes[i];
+    bits += 8;
+    while(bits >= 5){ output += B32_ALPHABET[(value >>> (bits-5)) & 31]; bits -= 5; }
+  }
+  if(bits > 0) output += B32_ALPHABET[(value << (5-bits)) & 31];
+  return output;
+}
+function base32Decode(str){
+  str = str.replace(/=+$/,'').toUpperCase();
+  let bits = 0, value = 0;
+  const bytes = [];
+  for(let i=0;i<str.length;i++){
+    const idx = B32_ALPHABET.indexOf(str[i]);
+    if(idx === -1) continue;
+    value = (value << 5) | idx;
+    bits += 5;
+    if(bits >= 8){ bytes.push((value >>> (bits-8)) & 0xff); bits -= 8; }
+  }
+  return new Uint8Array(bytes);
+}
+
+/* ---- TOTP (RFC 6238) over HMAC-SHA1 via the browser's real Web Crypto API ---- */
+async function hmacSha1(keyBytes, msgBytes){
+  const key = await crypto.subtle.importKey('raw', keyBytes, { name:'HMAC', hash:'SHA-1' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, msgBytes);
+  return new Uint8Array(sig);
+}
+async function hotp(secretBytes, counter){
+  const counterBytes = new Uint8Array(8);
+  let tmp = counter;
+  for(let i=7;i>=0;i--){ counterBytes[i] = tmp % 256; tmp = Math.floor(tmp/256); }
+  const hmac = await hmacSha1(secretBytes, counterBytes);
+  const offset = hmac[hmac.length-1] & 0xf;
+  const code = ((hmac[offset]&0x7f)<<24 | (hmac[offset+1]&0xff)<<16 | (hmac[offset+2]&0xff)<<8 | (hmac[offset+3]&0xff)) % 1000000;
+  return code.toString().padStart(6,'0');
+}
+async function verifyTotp(secretB32, token){
+  if(!/^\d{6}$/.test(token)) return false;
+  const secretBytes = base32Decode(secretB32);
+  const counter = Math.floor(Date.now()/1000/30);
+  for(let drift=-1; drift<=1; drift++){
+    if(await hotp(secretBytes, counter+drift) === token) return true;
+  }
+  return false;
+}
 
 function renderAttempts(attempts){
   const list = document.getElementById('security-attempts-list');
@@ -1436,180 +1570,169 @@ function renderAttempts(attempts){
   });
 }
 
-async function loadSecurityState(){
-  try{
-    const res = await fetch('/api/security');
-    if(!res.ok) throw new Error('bad response');
-    const data = await res.json();
+function loadSecurityState(){
+  if(!currentUsername) return;
+  const sec = getUserSecurity(currentUsername);
 
-    // TOTP status
-    const totpBadge = document.getElementById('totp-status-badge');
-    if(data.totp.enabled){
-      totpBadge.textContent = 'مفعّل';
-      totpBadge.style.background = 'var(--olive-soft)';
-      totpBadge.style.color = '#4c5934';
-      document.getElementById('totp-secret-box').style.display = 'none';
-    } else {
-      totpBadge.textContent = 'غير مفعّل';
-      totpBadge.style.background = 'var(--card)';
-      totpBadge.style.color = 'var(--ink-soft)';
-      if(data.totp.secret){
-        document.getElementById('totp-secret-box').style.display = 'block';
-        document.getElementById('totp-secret-text').textContent = data.totp.secret;
-        document.getElementById('totp-otpauth-text').textContent = data.totp.otpauthUrl;
-      }
+  // TOTP status
+  const totpBadge = document.getElementById('totp-status-badge');
+  if(sec.totp.enabled){
+    totpBadge.textContent = 'مفعّل';
+    totpBadge.style.background = 'var(--olive-soft)';
+    totpBadge.style.color = '#4c5934';
+    document.getElementById('totp-secret-box').style.display = 'none';
+  } else {
+    totpBadge.textContent = 'غير مفعّل';
+    totpBadge.style.background = 'var(--card)';
+    totpBadge.style.color = 'var(--ink-soft)';
+    if(sec.totp.secret){
+      document.getElementById('totp-secret-box').style.display = 'block';
+      document.getElementById('totp-secret-text').textContent = sec.totp.secret;
+      document.getElementById('totp-otpauth-text').textContent = sec.totp.otpauthUrl;
     }
-
-    // WebAuthn status
-    const waBadge = document.getElementById('webauthn-status-badge');
-    const waInfoBox = document.getElementById('webauthn-info-box');
-    if(data.webauthn && data.webauthn.credentialId){
-      waBadge.textContent = 'مسجّلة';
-      waBadge.style.background = 'var(--olive-soft)';
-      waBadge.style.color = '#4c5934';
-      waInfoBox.style.display = 'block';
-      const regDate = new Date(data.webauthn.registeredAt).toLocaleString('ar-SA', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'});
-      document.getElementById('webauthn-info-text').textContent =
-        `${data.webauthn.label || 'هذا الجهاز'} · مسجّلة بتاريخ ${regDate} · معرّف: ${data.webauthn.credentialId.slice(0,16)}…`;
-    } else {
-      waBadge.textContent = 'غير مسجّلة';
-      waBadge.style.background = 'var(--card)';
-      waBadge.style.color = 'var(--ink-soft)';
-      waInfoBox.style.display = 'none';
-    }
-
-    renderAttempts(data.attempts);
-  }catch(e){
-    console.error('Security load error:', e);
-    showToast('تعذّر الاتصال بالخادم — تأكد من تشغيل node server.js');
   }
+
+  // WebAuthn status
+  const waBadge = document.getElementById('webauthn-status-badge');
+  const waInfoBox = document.getElementById('webauthn-info-box');
+  if(sec.webauthn && sec.webauthn.credentialId){
+    waBadge.textContent = 'مسجّلة';
+    waBadge.style.background = 'var(--olive-soft)';
+    waBadge.style.color = '#4c5934';
+    waInfoBox.style.display = 'block';
+    const regDate = new Date(sec.webauthn.registeredAt).toLocaleString('ar-SA', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'});
+    document.getElementById('webauthn-info-text').textContent =
+      `${sec.webauthn.label || 'هذا الجهاز'} · مسجّلة بتاريخ ${regDate} · معرّف: ${sec.webauthn.credentialId.slice(0,16)}…`;
+  } else {
+    waBadge.textContent = 'غير مسجّلة';
+    waBadge.style.background = 'var(--card)';
+    waBadge.style.color = 'var(--ink-soft)';
+    waInfoBox.style.display = 'none';
+  }
+
+  renderAttempts(sec.attempts);
 }
 
 /* ---- TOTP setup ---- */
-document.getElementById('totp-setup-btn').addEventListener('click', async ()=>{
-  try{
-    const res = await fetch('/api/totp_setup', { method:'POST' });
-    if(!res.ok) throw new Error('setup failed');
-    const data = await res.json();
-    document.getElementById('totp-secret-box').style.display = 'block';
-    document.getElementById('totp-secret-text').textContent = data.secret;
-    document.getElementById('totp-otpauth-text').textContent = data.otpauthUrl;
-    showToast('تم إنشاء رمز سرّي جديد — أدخله في تطبيق المصادقة ثم تحقق منه ✓');
-    loadSecurityState();
-  }catch(e){
-    console.error(e);
-    showToast('تعذّر إنشاء رمز TOTP — تأكد من تشغيل node server.js');
-  }
+document.getElementById('totp-setup-btn').addEventListener('click', ()=>{
+  if(!currentUsername) return;
+  const secretBytes = crypto.getRandomValues(new Uint8Array(20));
+  const secret = base32Encode(secretBytes);
+  const label = encodeURIComponent('Rukn EPMS:' + currentUsername);
+  const issuer = encodeURIComponent('Rukn EPMS');
+  const otpauthUrl = `otpauth://totp/${label}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`;
+
+  const sec = getUserSecurity(currentUsername);
+  sec.totp = { secret, otpauthUrl, enabled: false };
+  saveUserSecurity(currentUsername, sec);
+  logAttempt(currentUsername, { type:'totp', action:'setup', result:'success', detail:'تم إنشاء رمز سرّي جديد' });
+
+  document.getElementById('totp-secret-box').style.display = 'block';
+  document.getElementById('totp-secret-text').textContent = secret;
+  document.getElementById('totp-otpauth-text').textContent = otpauthUrl;
+  showToast('تم إنشاء رمز سرّي جديد — أدخله في تطبيق المصادقة ثم تحقق منه ✓');
+  loadSecurityState();
 });
 
 /* ---- TOTP verify ---- */
 document.getElementById('totp-verify-btn').addEventListener('click', async ()=>{
+  if(!currentUsername) return;
   const code = document.getElementById('totp-code-input').value.trim();
   if(!/^\d{6}$/.test(code)){ showToast('أدخل رمزًا مكوّنًا من 6 أرقام'); return; }
-  try{
-    const res = await fetch('/api/totp_verify', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ code })
-    });
-    const data = await res.json();
-    if(data.ok){
-      showToast('تم التحقق من الرمز وتفعيل TOTP بنجاح ✓');
-      document.getElementById('totp-code-input').value = '';
-    } else {
-      showToast('الرمز غير صحيح أو منتهي الصلاحية');
-    }
-    loadSecurityState();
-  }catch(e){
-    console.error(e);
-    showToast('تعذّر التحقق — تأكد من تشغيل node server.js');
+
+  const sec = getUserSecurity(currentUsername);
+  if(!sec.totp.secret){ showToast('أنشئ رمزًا سرّيًا أولًا'); return; }
+
+  const valid = await verifyTotp(sec.totp.secret, code);
+  if(valid) sec.totp.enabled = true;
+  saveUserSecurity(currentUsername, sec);
+  logAttempt(currentUsername, {
+    type:'totp', action:'verify',
+    result: valid ? 'success' : 'fail',
+    detail: valid ? 'تم التحقق من الرمز بنجاح' : 'رمز غير صحيح أو منتهي'
+  });
+
+  if(valid){
+    showToast('تم التحقق من الرمز وتفعيل TOTP بنجاح ✓');
+    document.getElementById('totp-code-input').value = '';
+  } else {
+    showToast('الرمز غير صحيح أو منتهي الصلاحية');
   }
+  loadSecurityState();
 });
 
-/* ---- WebAuthn register ---- */
+/* ---- WebAuthn register (a second/extra device, separate from the login passkey) ---- */
 document.getElementById('webauthn-register-btn').addEventListener('click', async ()=>{
-  if(!window.PublicKeyCredential){
-    showToast('متصفحك لا يدعم WebAuthn');
-    return;
-  }
+  if(!currentUsername) return;
+  if(!window.PublicKeyCredential){ showToast('متصفحك لا يدعم WebAuthn'); return; }
+
   try{
-    const optRes = await fetch('/api/webauthn_register_options', { method:'POST' });
-    if(!optRes.ok) throw new Error('options failed');
-    const opts = await optRes.json();
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const userIdBytes = new TextEncoder().encode(currentUsername + ':device:' + Date.now());
 
     const credential = await navigator.credentials.create({
       publicKey: {
-        challenge: b64urlToBuffer(opts.challenge),
-        rp: { name: opts.rpName, id: opts.rpId },
-        user: {
-          id: b64urlToBuffer(opts.userId),
-          name: opts.userName,
-          displayName: opts.userDisplayName
-        },
-        pubKeyCredParams: [
-          { type:'public-key', alg:-7 },   // ES256
-          { type:'public-key', alg:-257 }  // RS256
-        ],
+        challenge,
+        rp: { name: 'Rukn EPMS', id: location.hostname },
+        user: { id: userIdBytes, name: currentUsername, displayName: document.getElementById('avatar-name').textContent },
+        pubKeyCredParams: [ { type:'public-key', alg:-7 }, { type:'public-key', alg:-257 } ],
         authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required' },
         timeout: 60000,
         attestation: 'none'
       }
     });
 
-    const label = /Mac/.test(navigator.platform) ? 'Touch ID' :
-                  /Win/.test(navigator.platform) ? 'Windows Hello' : 'بصمة الجهاز';
+    const sec = getUserSecurity(currentUsername);
+    sec.webauthn = { credentialId: credential.id, label: deviceLabel(), registeredAt: new Date().toISOString() };
+    saveUserSecurity(currentUsername, sec);
+    logAttempt(currentUsername, { type:'webauthn', action:'register', result:'success', detail:'تم تسجيل بصمة الجهاز' });
 
-    const regRes = await fetch('/api/webauthn_register', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ id: credential.id, label })
-    });
-    const regData = await regRes.json();
-    if(regData.ok){
-      showToast('تم تسجيل بصمة الجهاز بنجاح ✓');
-    } else {
-      showToast('تعذّر حفظ بصمة الجهاز على الخادم');
-    }
+    showToast('تم تسجيل بصمة الجهاز بنجاح ✓');
     loadSecurityState();
   }catch(e){
     console.error(e);
     if(e.name === 'NotAllowedError'){
       showToast('تم إلغاء عملية التسجيل');
     } else {
-      showToast('تعذّر تسجيل بصمة الجهاز — تأكد من تشغيل node server.js وأن جهازك يدعم WebAuthn');
+      showToast(describeAuthError(e));
     }
   }
 });
 
 /* ---- WebAuthn delete (permanent) ---- */
-document.getElementById('webauthn-delete-btn').addEventListener('click', async ()=>{
-  if(!confirm('سيتم حذف بصمة الجهاز المسجّلة نهائيًا من الخادم. هل تريد المتابعة؟')) return;
-  try{
-    const res = await fetch('/api/webauthn_delete', { method:'DELETE' });
-    const data = await res.json();
-    if(data.ok){
-      showToast('تم حذف الواصف نهائيًا ✓');
-    } else {
-      showToast('تعذّر حذف الواصف');
-    }
-    loadSecurityState();
-  }catch(e){
-    console.error(e);
-    showToast('تعذّر الاتصال بالخادم — تأكد من تشغيل node server.js');
-  }
+document.getElementById('webauthn-delete-btn').addEventListener('click', ()=>{
+  if(!currentUsername) return;
+  if(!confirm('سيتم حذف بصمة الجهاز المسجّلة نهائيًا من هذا المتصفح. هل تريد المتابعة؟')) return;
+
+  const sec = getUserSecurity(currentUsername);
+  const hadOne = !!sec.webauthn.credentialId;
+  sec.webauthn = { credentialId: null, label: null, registeredAt: null };
+  saveUserSecurity(currentUsername, sec);
+  logAttempt(currentUsername, {
+    type:'webauthn', action:'delete',
+    result: hadOne ? 'success' : 'fail',
+    detail: hadOne ? 'تم حذف الواصف نهائيًا' : 'لا يوجد واصف مسجّل لحذفه'
+  });
+
+  showToast(hadOne ? 'تم حذف الواصف نهائيًا ✓' : 'لا يوجد واصف لحذفه');
+  loadSecurityState();
 });
 
 /* ---------------- Startup ---------------- */
-/* Checks whether a session cookie is already valid (so a page refresh
-   doesn't force signing in again) and shows the auth screen or the app
-   accordingly. App data itself (vehicles/visitors/bookings) loads from the
-   server in parallel — it's shared demo data, not tied to who's logged in. */
-(async function startup(){
+/* Checks whether a session is already active in this browser (so a page
+   refresh doesn't force signing in again) and shows the auth screen or the
+   app accordingly. Everything — accounts, vehicles/visitors/bookings, and
+   security settings — lives in this browser's localStorage; there's no
+   server and no shared file, so data does not sync across devices or
+   browsers. */
+(function startup(){
   checkAuth();
-  await loadPersistedAppData();
+  loadPersistedAppData();
   renderAllVehicles();
   renderAllVisitors();
 })();
+
+document.getElementById('download-json-btn').addEventListener('click', downloadAppDataAsJSON);
 
 </script>
 </body>
